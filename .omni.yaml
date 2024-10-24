@@ -3,6 +3,10 @@ up:
   - github-release:
       golangci/golangci-lint: 1.60.1
 
+path:
+  append__toappend:
+    - example
+
 commands:
   test:
     desc: Run all tests

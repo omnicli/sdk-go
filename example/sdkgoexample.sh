@@ -22,9 +22,10 @@
 # opt:--db-pass PASS:type=str:Database password
 # opt:--db-replica VALUE:type=array/str:Database replicas in host:port format
 #
-# help: Example script demonstrating omnicli argument parsing with both
-# +:application and database configuration. Shows usage of required arguments,
-# +:optional flags, single values and arrays, with various supported types.
+# help: Example script demonstrating omnicli argument parsing
+# +:
+# +: This shows the usage of required arguments, optional flags,
+# +: single values and arrays, with various supported types.
 
 # Determine script dir
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
