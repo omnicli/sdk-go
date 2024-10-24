@@ -1,0 +1,20 @@
+up:
+  - go: auto
+  - github-release:
+      golangci/golangci-lint: 1.60.1
+
+commands:
+  test:
+    desc: Run all tests
+    run: |
+      set -e
+      omni test lint
+      omni test unit
+    subcommands:
+      lint:
+        desc: Run lint
+        run: golangci-lint run
+      unit:
+        desc: Run unit and integration tests
+        run: go test ./...
+
