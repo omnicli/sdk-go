@@ -81,7 +81,6 @@ Or as part of your command file wrapper header:
 # argparser: true
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 go run "${DIR}"/your-command.go "$@"
-```
 ...
 ```
 
