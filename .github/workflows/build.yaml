@@ -74,6 +74,17 @@ jobs:
           fi
           echo "REQUIRES_TESTS=${REQUIRES_TESTS}" | tee -a "$GITHUB_ENV"
 
+      - name: Check if pushing a tag
+        env:
+          GITHUB_REF: ${{ github.ref }}
+        run: |
+          PUBLISH_RELEASE=false
+          if [[ -n "$GITHUB_REF" ]] && [[ "$GITHUB_REF" == "refs/tags/v"* ]]; then
+            PUBLISH_RELEASE=true
+            echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" | tee -a "$GITHUB_ENV"
+          fi
+          echo "PUBLISH_RELEASE=${PUBLISH_RELEASE}" | tee -a "$GITHUB_ENV"
+
 
   lint:
     name: Checking lint
@@ -141,3 +152,50 @@ jobs:
       - name: Fail if tests failed
         if: needs.tests.result == 'failure'
         run: exit 1
+
+
+  push-release:
+    name: Release version
+    runs-on: ubuntu-latest
+
+    needs:
+      - prepare-env
+      - results
+
+    if: needs.prepare-env.outputs.publish_release == 'true' && needs.results.result != 'failure'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create application token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        env:
+          APP_ID: ${{ secrets.OMNICLI_APP_ID }}
+          PRIVATE_KEY: ${{ secrets.OMNICLI_PRIVATE_KEY }}
+        with:
+          app-id: ${{ env.APP_ID }}
+          private-key: ${{ env.PRIVATE_KEY }}
+
+      - name: Checkout current commit
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Release version
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          tag: v${{ needs.prepare-env.outputs.release_version }}
+          name: v${{ needs.prepare-env.outputs.release_version }}
+          generateReleaseNotes: true
+          commit: ${{ github.sha }}
+          makeLatest: true
+          skipIfReleaseExists: true
+          # This should allow to fail the release creation
+          # if the release already exists and is not a draft
+          # or pre-release (none of our releases are)
+          allowUpdates: true
+          updateOnlyUnreleased: true
+
