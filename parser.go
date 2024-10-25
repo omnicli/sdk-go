@@ -386,8 +386,6 @@ func (a *Args) Fill(v interface{}) error {
 		return fmt.Errorf("argument must be a pointer to a struct")
 	}
 
-	fmt.Println("DEBUG: HELLO")
-
 	structType := strct.Type()
 
 	for i := 0; i < strct.NumField(); i++ {
@@ -408,7 +406,6 @@ func (a *Args) Fill(v interface{}) error {
 		} else {
 			argName = toParamName(fieldType.Name)
 		}
-		fmt.Printf("DEBUG: fieldType.Name: %s -- argName: %s\n", fieldType.Name, argName)
 
 		declaredType, exists := a.declaredArgs[argName]
 		if !exists {
