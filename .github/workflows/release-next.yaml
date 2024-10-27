@@ -67,7 +67,13 @@ jobs:
           files_yaml: |
             source_code:
               go.mod
+              go.sum
               *.go
+              !*_test.go
+              cmd/**/*.go
+              !cmd/**/*_test.go
+              internal/**/*.go
+              !internal/**/*_test.go
 
       - name: Check if a new release would be required
         env:
