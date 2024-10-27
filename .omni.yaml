@@ -6,6 +6,7 @@ up:
 path:
   append__toappend:
     - example
+    - example-dist
 
 commands:
   test:
@@ -22,3 +23,13 @@ commands:
         desc: Run unit and integration tests
         run: go test ./...
 
+  build:
+    desc: Build omni-metagen
+    run: |
+      go build -o dist/omni-metagen ./cmd/omni-metagen
+    subcommands:
+      example:
+        desc: Build the example
+        run: |
+          go generate ./example/...
+          go build -o example-dist/sdkgoexample2 ./example

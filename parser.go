@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/omnicli/sdk-go/internal/omniarg"
 )
 
 // typeConverter is a generic interface for type conversion functions.
@@ -402,7 +404,10 @@ func (a *Args) Fill(v interface{}) error {
 				continue // Skip this field
 			}
 
-			argName = tag
+			argNameOverride, _ := omniarg.ParseTag(tag)
+			if argNameOverride != "" {
+				argName = tag
+			}
 		} else {
 			argName = toParamName(fieldType.Name)
 		}

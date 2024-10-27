@@ -1,1 +1,5 @@
 .*.swp
+
+# Ignore the dist directories
+/dist/
+/example-dist/
