@@ -5,7 +5,7 @@ A metadata generator for `omni` custom command structs in Go.
 ## Installation
 
 ```bash
-go install github.com/omnicli/sdk-go/cmd/omni-metagen@latest
+go install github.com/omnicli/sdk-go/cmd/omni-metagen-go@latest
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ go install github.com/omnicli/sdk-go/cmd/omni-metagen@latest
 Add a `go:generate` directive to your code:
 
 ```go
-//go:generate omni-metagen -struct=Config -o omni/my-command.metadata.yaml
+//go:generate omni-metagen-go -struct=Config -o omni/my-command.metadata.yaml
 
 // MyCommand is a command that does something
 // @category my-category, my-sub-category

@@ -7,7 +7,7 @@ import (
 	omnicli "github.com/omnicli/sdk-go"
 )
 
-//go:generate go run ../cmd/omni-metagen -struct=AppConfig -output=../example-dist/sdkgoexample2.metadata.yaml
+//go:generate go run ../cmd/omni-metagen-go -struct=AppConfig -output=../example-dist/sdkgoexample2.metadata.yaml
 
 // AppConfig demonstrates various field types and tags
 // @help This is a sample application configuration
@@ -34,7 +34,7 @@ type AppConfig struct {
 	Unknown *string `omniarg:"-"` // --unknown, not parsed into config struct
 
 	// Non-exported fields are ignored
-	ignored string
+	ignored string // nolint:all
 }
 
 // DatabaseConfig demonstrates database-specific configuration

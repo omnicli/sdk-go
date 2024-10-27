@@ -24,9 +24,9 @@ commands:
         run: go test ./...
 
   build:
-    desc: Build omni-metagen
+    desc: Build omni-metagen-go
     run: |
-      go build -o dist/omni-metagen ./cmd/omni-metagen
+      go build -o dist/omni-metagen-go ./cmd/omni-metagen-go
     subcommands:
       example:
         desc: Build the example

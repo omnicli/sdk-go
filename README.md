@@ -26,7 +26,7 @@ import (
     "github.com/omnicli/sdk-go"
 )
 
-//go:generate omni-metagen -struct=Config -output=dist/my-command.metadata.yaml
+//go:generate omni-metagen-go -struct=Config -output=dist/my-command.metadata.yaml
 
 type Config struct {
     // Fields are automatically mapped to kebab-case CLI arguments
@@ -87,12 +87,12 @@ go run "${DIR}"/your-command.go "$@"
 
 ### Metadata Generation
 
-The SDK provides a code generation tool `omni-metagen` that can be used to generate metadata files for your commands. This tool will generate the metadata in YAML format based on the struct you provide. You will still need to indicate the name of the struct and the location of the output file (which should be in the same directory as your command, and named `<command>.metadata.yaml`).
+The SDK provides a code generation tool `omni-metagen-go` that can be used to generate metadata files for your commands. This tool will generate the metadata in YAML format based on the struct you provide. You will still need to indicate the name of the struct and the location of the output file (which should be in the same directory as your command, and named `<command>.metadata.yaml`).
 
 You can install the tool by running:
 
 ```bash
-go install github.com/omnicli/sdk-go/cmd/omni-metagen@latest
+go install github.com/omnicli/sdk-go/cmd/omni-metagen-go@latest
 ```
 
 Or by using GitHub releases in omni:

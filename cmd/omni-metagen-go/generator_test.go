@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	main "github.com/omnicli/sdk-go/cmd/omni-metagen"
+	main "github.com/omnicli/sdk-go/cmd/omni-metagen-go"
 )
 
 func compareParameters(t *testing.T, got, want []main.Parameter) {
@@ -30,7 +30,7 @@ func compareParameters(t *testing.T, got, want []main.Parameter) {
 			errorMsg += fmt.Sprintf("\n\nMissing parameter: %+v", want[i])
 		}
 
-		t.Errorf(errorMsg)
+		t.Error(errorMsg)
 	}
 }
 
