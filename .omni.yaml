@@ -2,6 +2,7 @@ up:
   - go: auto
   - github-release:
       golangci/golangci-lint: 1.60.1
+      goreleaser/goreleaser: latest
 
 path:
   append__toappend:
@@ -26,7 +27,8 @@ commands:
   build:
     desc: Build omni-metagen-go
     run: |
-      go build -o dist/omni-metagen-go ./cmd/omni-metagen-go
+      goreleaser build --snapshot --clean
+
     subcommands:
       example:
         desc: Build the example

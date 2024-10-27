@@ -1,0 +1,54 @@
+version: 2
+
+project_name: omni-metagen-go
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/omni-metagen-go
+    binary: omni-metagen-go
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.buildVersion={{.Version}} -X main.buildCommit={{.Commit}} -X main.buildDate={{.Date}} -X main.buildOs={{.Os}} -X main.buildArch={{.Arch}}
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^refactor:'
+      - '^style:'
+      - '^chore:'
+      - '^build:'
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: omnicli
+    name: sdk-go

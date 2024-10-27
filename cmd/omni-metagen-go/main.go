@@ -2,15 +2,33 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 )
 
+// These variables are set during build using -ldflags
+var (
+	buildVersion = "dev"
+	buildCommit  = "none"
+	buildDate    = "unknown"
+	buildOs      = "unknown"
+	buildArch    = "unknown"
+)
+
 func main() {
 	structName := flag.String("struct", "", "name of struct to use for metadata")
 	output := flag.String("output", "metadata.yaml", "output file path")
+	versionFlag := flag.Bool("V", false, "Print version information")
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("omni-metagen-go version %s\n", buildVersion)
+		fmt.Printf("commit: %s\n", buildCommit)
+		fmt.Printf("built for %s %s at: %s\n", buildOs, buildArch, buildDate)
+		os.Exit(0)
+	}
 
 	if *structName == "" {
 		log.Fatal("struct name is required")

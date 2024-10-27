@@ -199,3 +199,43 @@ jobs:
           allowUpdates: true
           updateOnlyUnreleased: true
 
+
+  publish-binaries:
+    name: Publish Binaries
+    runs-on: ubuntu-latest
+    needs:
+      - push-release
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create application token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        env:
+          APP_ID: ${{ secrets.OMNICLI_APP_ID }}
+          PRIVATE_KEY: ${{ secrets.OMNICLI_PRIVATE_KEY }}
+        with:
+          app-id: ${{ env.APP_ID }}
+          private-key: ${{ env.PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ./go.mod
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
