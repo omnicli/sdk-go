@@ -2,6 +2,12 @@ name: Release next
 
 on:
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force release'
+        required: false
+        default: 'false'
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}
@@ -61,7 +67,7 @@ jobs:
       - name: Check changed files since previous release
         uses: tj-actions/changed-files@v45
         id: changed-files
-        if: ${{ env.RELEASE_VERSION == '' }}
+        if: ${{ env.RELEASE_VERSION == '' && inputs.force != 'true' }}
         with:
           base_sha: ${{ env.PREVIOUS_TAG_SHA }}
           files_yaml: |
@@ -78,12 +84,14 @@ jobs:
       - name: Check if a new release would be required
         env:
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+          FORCE_RELEASE: ${{ inputs.force }}
           CHANGED_FILES: ${{ steps.changed-files.outputs.source_code_any_changed }}
           DELETED_FILES: ${{ steps.changed-files.outputs.source_code_any_deleted }}
           MODIFIED_FILES: ${{ steps.changed-files.outputs.source_code_any_modified }}
         run: |
           PUBLISH_RELEASE=false
           if [[ -n "$RELEASE_VERSION" ]] || \
+               [[ "$FORCE_RELEASE" == "true" ]] || \
                [[ "$CHANGED_FILES" == "true" ]] || \
                [[ "$DELETED_FILES" == "true" ]] || \
                [[ "$MODIFIED_FILES" == "true" ]]; then
