@@ -55,12 +55,12 @@ jobs:
         with:
           files_yaml: |
             source_code:
-              go.mod
-              go.sum
-              *.go
-              cmd/**/*.go
-              internal/**/*.go
-              .github/workflows/build.yaml
+              - 'go.mod'
+              - 'go.sum'
+              - '*.go'
+              - 'cmd/**/*.go'
+              - 'internal/**/*.go'
+              - '.github/workflows/build.yaml'
 
       - name: Identify if testing is required
         if: ${{ env.REQUIRES_TESTS != 'true' }}
