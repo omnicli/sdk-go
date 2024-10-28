@@ -177,8 +177,6 @@ outerLoop:
 				Type: inferType(field.Type),
 			}
 
-			fmt.Println("param.Name: ", param.Name)
-
 			// If any options, apply them
 			if options != nil {
 				g.applyOptions(&param, options)
