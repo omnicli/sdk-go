@@ -148,7 +148,11 @@ type BasicCmd struct {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			generator := main.NewGenerator(tmpDir)
+			generator, err := main.NewGenerator(tmpDir)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
 			result, err := generator.Generate(tt.structName)
 
 			if tt.expectError {
@@ -233,7 +237,11 @@ type ComplexCmd struct {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			generator := main.NewGenerator(tmpDir)
+			generator, err := main.NewGenerator(tmpDir)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
 			result, err := generator.Generate(tt.structName)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -288,7 +296,11 @@ type Cmd2 struct {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			generator := main.NewGenerator(tmpDir)
+			generator, err := main.NewGenerator(tmpDir)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
 			result, err := generator.Generate(tt.structName)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -307,6 +319,367 @@ type Cmd2 struct {
 			}
 		})
 	}
+}
+
+func TestEmbeddedStruct(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "generator-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	writeTestFile(t, tmpDir, "types.go", `
+package testpkg
+
+type Database struct {
+    Host string `+"`omniarg:\"desc=\\\"database host\\\"\"`"+`
+    Port int    `+"`omniarg:\"desc=\\\"database port\\\"\"`"+`
+}`)
+
+	writeTestFile(t, tmpDir, "cmd.go", `
+package testpkg
+
+type Config struct {
+    Database // Embedded struct as value
+}`)
+
+	generator, err := main.NewGenerator(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	result, err := generator.Generate("Config")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedParams := []main.Parameter{
+		{
+			Name:        "--database-host",
+			Description: "database host",
+			Type:        "str",
+		},
+		{
+			Name:        "--database-port",
+			Description: "database port",
+			Type:        "int",
+		},
+	}
+
+	compareParameters(t, result.Syntax.Parameters, expectedParams)
+}
+
+func TestEmbeddedStructWithTag(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "generator-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	writeTestFile(t, tmpDir, "types.go", `
+package testpkg
+
+type Database struct {
+    Host string `+"`omniarg:\"desc=\\\"database host\\\"\"`"+`
+    Port int    `+"`omniarg:\"desc=\\\"database port\\\"\"`"+`
+}`)
+
+	writeTestFile(t, tmpDir, "cmd.go", `
+package testpkg
+
+type Config struct {
+    Database `+"`omniarg:\"db\"`"+`
+}`)
+
+	generator, err := main.NewGenerator(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	result, err := generator.Generate("Config")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedParams := []main.Parameter{
+		{
+			Name:        "--db-host",
+			Description: "database host",
+			Type:        "str",
+		},
+		{
+			Name:        "--db-port",
+			Description: "database port",
+			Type:        "int",
+		},
+	}
+
+	compareParameters(t, result.Syntax.Parameters, expectedParams)
+}
+
+func TestEmbeddedPointerStruct(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "generator-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	writeTestFile(t, tmpDir, "types.go", `
+package testpkg
+
+type Database struct {
+    Host string `+"`omniarg:\"desc=\\\"database host\\\"\"`"+`
+    Port int    `+"`omniarg:\"desc=\\\"database port\\\"\"`"+`
+}`)
+
+	writeTestFile(t, tmpDir, "cmd.go", `
+package testpkg
+
+type Config struct {
+    *Database // Embedded struct as pointer
+}`)
+
+	generator, err := main.NewGenerator(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	result, err := generator.Generate("Config")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedParams := []main.Parameter{
+		{
+			Name:        "--database-host",
+			Description: "database host",
+			Type:        "str",
+		},
+		{
+			Name:        "--database-port",
+			Description: "database port",
+			Type:        "int",
+		},
+	}
+
+	compareParameters(t, result.Syntax.Parameters, expectedParams)
+}
+
+func TestEmbeddedPointerStructWithTag(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "generator-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	writeTestFile(t, tmpDir, "types.go", `
+package testpkg
+
+type Database struct {
+    Host string `+"`omniarg:\"desc=\\\"database host\\\"\"`"+`
+    Port int    `+"`omniarg:\"desc=\\\"database port\\\"\"`"+`
+}`)
+
+	writeTestFile(t, tmpDir, "cmd.go", `
+package testpkg
+
+type Config struct {
+    *Database `+"`omniarg:\"db\"`"+`
+}`)
+
+	generator, err := main.NewGenerator(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	result, err := generator.Generate("Config")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedParams := []main.Parameter{
+		{
+			Name:        "--db-host",
+			Description: "database host",
+			Type:        "str",
+		},
+		{
+			Name:        "--db-port",
+			Description: "database port",
+			Type:        "int",
+		},
+	}
+
+	compareParameters(t, result.Syntax.Parameters, expectedParams)
+}
+
+func TestStructField(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "generator-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	writeTestFile(t, tmpDir, "types.go", `
+package testpkg
+
+type Database struct {
+    Host string `+"`omniarg:\"desc=\\\"database host\\\"\"`"+`
+    Port int    `+"`omniarg:\"desc=\\\"database port\\\"\"`"+`
+}`)
+
+	writeTestFile(t, tmpDir, "cmd.go", `
+package testpkg
+
+type Config struct {
+    Primary Database `+"`omniarg:\"desc=\\\"primary database\\\"\"`"+`
+    Secondary Database `+"`omniarg:\"other desc=\\\"secondary database\\\"\"`"+`
+}`)
+
+	generator, err := main.NewGenerator(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	result, err := generator.Generate("Config")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedParams := []main.Parameter{
+		{
+			Name:        "--primary-host",
+			Description: "database host",
+			Type:        "str",
+		},
+		{
+			Name:        "--primary-port",
+			Description: "database port",
+			Type:        "int",
+		},
+		{
+			Name:        "--other-host",
+			Description: "database host",
+			Type:        "str",
+		},
+		{
+			Name:        "--other-port",
+			Description: "database port",
+			Type:        "int",
+		},
+	}
+
+	compareParameters(t, result.Syntax.Parameters, expectedParams)
+}
+
+func TestStructPointerField(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "generator-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	writeTestFile(t, tmpDir, "types.go", `
+package testpkg
+
+type Database struct {
+    Host string `+"`omniarg:\"desc=\\\"database host\\\"\"`"+`
+    Port int    `+"`omniarg:\"desc=\\\"database port\\\"\"`"+`
+}`)
+
+	writeTestFile(t, tmpDir, "cmd.go", `
+package testpkg
+
+type Config struct {
+    Primary *Database `+"`omniarg:\"desc=\\\"primary database\\\"\"`"+`
+    Secondary *Database `+"`omniarg:\"other desc=\\\"secondary database\\\"\"`"+`
+}`)
+
+	generator, err := main.NewGenerator(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	result, err := generator.Generate("Config")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedParams := []main.Parameter{
+		{
+			Name:        "--primary-host",
+			Description: "database host",
+			Type:        "str",
+		},
+		{
+			Name:        "--primary-port",
+			Description: "database port",
+			Type:        "int",
+		},
+		{
+			Name:        "--other-host",
+			Description: "database host",
+			Type:        "str",
+		},
+		{
+			Name:        "--other-port",
+			Description: "database port",
+			Type:        "int",
+		},
+	}
+
+	compareParameters(t, result.Syntax.Parameters, expectedParams)
+}
+
+func TestStackedStructs(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "generator-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	writeTestFile(t, tmpDir, "types.go", `
+package testpkg
+
+type Leaf struct {
+    Value string `+"`omniarg:\"desc=\\\"final value\\\"\"`"+`
+}
+
+type NodeA struct {
+    Leaf            // embedded struct
+}
+
+type NodeB struct {
+    *NodeA          // embedded pointer struct
+}
+
+type NodeC struct {
+    Next NodeB      // struct field
+}
+
+type Root struct {
+    *NodeC          // embedded pointer to struct containing a field
+}`)
+
+	generator, err := main.NewGenerator(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	result, err := generator.Generate("Root")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedParams := []main.Parameter{
+		{
+			Name:        "--node-c-next-node-a-leaf-value",
+			Description: "final value",
+			Type:        "str",
+		},
+	}
+
+	compareParameters(t, result.Syntax.Parameters, expectedParams)
 }
 
 // Helper function to write test files

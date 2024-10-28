@@ -377,7 +377,7 @@ func (a *Args) validateFieldType(field reflect.StructField, declaredType string)
 // The struct fields are matched with argument names based on their name or 'omniarg' tag.
 // Field names are converted to lowercase for matching.
 // It returns an error if any field cannot be filled or if types don't match.
-func (a *Args) Fill(v interface{}) error {
+func (a *Args) Fill(v interface{}, prefix ...string) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr || val.IsNil() {
 		return fmt.Errorf("argument must be a non-nil pointer to a struct")
@@ -389,6 +389,10 @@ func (a *Args) Fill(v interface{}) error {
 	}
 
 	structType := strct.Type()
+	currentPrefix := ""
+	if len(prefix) > 0 {
+		currentPrefix = prefix[0]
+	}
 
 	for i := 0; i < strct.NumField(); i++ {
 		field := strct.Field(i)
@@ -417,6 +421,33 @@ func (a *Args) Fill(v interface{}) error {
 			return fmt.Errorf("error in %s: field %q: missing argument name",
 				structType.Name(), fieldType.Name)
 		}
+		argName = currentPrefix + argName
+
+		// Handle embedded struct
+		isStruct := field.Kind() == reflect.Struct
+		isPtrToStruct := field.Kind() == reflect.Ptr && field.Type().Elem().Kind() == reflect.Struct
+		if isStruct || isPtrToStruct {
+			var fieldInterface interface{}
+			if isStruct {
+				fieldInterface = field.Addr().Interface()
+			} else {
+				if field.IsNil() {
+					// Initialize the pointer with a new struct
+					field.Set(reflect.New(field.Type().Elem()))
+				}
+
+				fieldInterface = field.Interface()
+			}
+
+			// Recursively fill embedded struct with new prefix
+			if err := a.Fill(fieldInterface, argName+"_"); err != nil {
+				return fmt.Errorf("error in embedded struct %s: %w", fieldType.Name, err)
+			}
+			continue
+		}
+
+		fmt.Printf("argName: %s\n", argName)
+		fmt.Printf("declaredArgs: %+v\n", a.declaredArgs)
 
 		declaredType, exists := a.declaredArgs[argName]
 		if !exists {

@@ -42,7 +42,11 @@ func main() {
 		dir = filepath.Dir(dir)
 	}
 
-	generator := NewGenerator(dir)
+	generator, err := NewGenerator(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	metadata, err := generator.Generate(*structName)
 	if err != nil {
 		log.Fatal(err)
