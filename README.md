@@ -22,37 +22,38 @@ The SDK can read omni-parsed arguments from environment variables into Go struct
 package main
 
 import (
-    "log"
-    "github.com/omnicli/sdk-go"
+	"log"
+
+	omnicli "github.com/omnicli/sdk-go"
 )
 
 //go:generate omni-metagen-go -struct=Config -output=dist/my-command.metadata.yaml
 
 type Config struct {
-    // Fields are automatically mapped to kebab-case CLI arguments
-    InputFile string    // maps to --input-file
-    Verbose   bool      // maps to --verbose
-    LogFile   *string   // maps to --log-file, optional
-    Workers   []string  // maps to --workers (array)
+	// Fields are automatically mapped to kebab-case CLI arguments
+	InputFile string   // maps to --input-file
+	Verbose   bool     // maps to --verbose
+	LogFile   *string  // maps to --log-file, optional
+	Workers   []string // maps to --workers (array)
 
-    // Use tags for custom names or to skip fields
-    DBHost    string    `omniarg:"db_host"`  // custom name
-    Internal  string    `omniarg:"-"`        // skip this field
+	// Use tags for custom names or to skip fields
+	DBHost   string `omniarg:"db_host"` // custom name
+	Internal string `omniarg:"-"`       // skip this field
 }
 
 func main() {
-    var cfg Config
-    _, err := omnicli.ParseArgs(&cfg)
-    if err != nil {
-        log.Fatalf("Failed to parse args: %v", err)
-    }
+	var cfg Config
+	_, err := omnicli.ParseArgs(&cfg)
+	if err != nil {
+		log.Fatalf("Failed to parse args: %v", err)
+	}
 
-    if cfg.Verbose {
-        log.Println("Verbose mode enabled")
-    }
-    if cfg.InputFile != "" {
-        log.Printf("Processing file: %s", cfg.InputFile)
-    }
+	if cfg.Verbose {
+		log.Println("Verbose mode enabled")
+	}
+	if cfg.InputFile != "" {
+		log.Printf("Processing file: %s", cfg.InputFile)
+	}
 }
 ```
 

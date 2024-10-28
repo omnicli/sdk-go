@@ -412,6 +412,12 @@ func (a *Args) Fill(v interface{}) error {
 			argName = toParamName(fieldType.Name)
 		}
 
+		argName = omniarg.SanitizeArgName(argName, '_')
+		if argName == "" {
+			return fmt.Errorf("error in %s: field %q: missing argument name",
+				structType.Name(), fieldType.Name)
+		}
+
 		declaredType, exists := a.declaredArgs[argName]
 		if !exists {
 			return fmt.Errorf("error in %s: field %q: parameter %q not found",

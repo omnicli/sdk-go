@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"strings"
 
 	"github.com/omnicli/sdk-go/internal/omniarg"
 )
@@ -141,8 +140,10 @@ outerLoop:
 			}
 
 			// Make sure the parameter name is lowercase
-			param.Name = strings.ToLower(param.Name)
-			param.Name = strings.TrimPrefix(param.Name, "-")
+			param.Name = omniarg.SanitizeArgName(param.Name, '-')
+			if param.Name == "" {
+				continue
+			}
 
 			// If not a positional, add the appropriate prefix
 			if !param.Positional {
