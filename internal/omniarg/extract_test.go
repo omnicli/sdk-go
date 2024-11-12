@@ -252,6 +252,22 @@ func TestParseTag(t *testing.T) {
 				"allow_hyphen_values": true,
 			},
 		},
+		{
+			name:         "allow_negative_numbers option",
+			tag:          `number allow_negative_numbers=true`,
+			expectedName: "number",
+			expectedOpts: map[string]interface{}{
+				"allow_negative_numbers": true,
+			},
+		},
+		{
+			name:         "group_occurrences option",
+			tag:          `count group_occurrences=true`,
+			expectedName: "count",
+			expectedOpts: map[string]interface{}{
+				"group_occurrences": true,
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -30,7 +30,7 @@ type (
 		Description          string                 `yaml:"desc,omitempty"`
 		Positional           bool                   `yaml:"positional,omitempty"`
 		Required             bool                   `yaml:"required,omitempty"`
-		Placeholder          string                 `yaml:"placeholder,omitempty"`
+		Placeholders         []string               `yaml:"placeholders,omitempty"`
 		Type                 string                 `yaml:"type"`
 		Values               []string               `yaml:"values,omitempty"`
 		Default              interface{}            `yaml:"default,omitempty"`

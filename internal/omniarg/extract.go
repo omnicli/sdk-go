@@ -56,7 +56,8 @@ func ParseTag(tag string) (string, map[string]interface{}) {
 			switch key {
 			case "aliases":
 				options[key] = strings.Split(value, ",")
-			case "positional", "required", "last", "leftovers", "allow_hyphen_values":
+			case "positional", "required", "last", "leftovers", "allow_hyphen_values",
+				"allow_negative_numbers", "group_occurrences":
 				options[key] = value == "true"
 			case "requires", "conflicts_with", "required_without", "required_without_all":
 				options[key] = strings.Split(value, ",")
@@ -104,6 +105,12 @@ func ParseTag(tag string) (string, map[string]interface{}) {
 				} else {
 					options["type"] = strType
 				}
+			case "placeholders", "placeholder":
+				placeholders := strings.Split(value, " ")
+				for i, placeholder := range placeholders {
+					placeholders[i] = strings.TrimSpace(placeholder)
+				}
+				options["placeholders"] = placeholders
 			default:
 				options[key] = value
 			}

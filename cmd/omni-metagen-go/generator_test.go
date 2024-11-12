@@ -168,8 +168,8 @@ type ComplexCmd struct {
 	// Parameter with allow_hyphen_values
 	Args []string `+"`omniarg:\"args type=array/string allow_hyphen_values=true leftovers=true\"`"+`
 
-	// Parameter with num_values
-	Range []int `+"`omniarg:\"range type=array/int num_values=2 placeholder=\\\"MIN MAX\\\"\"`"+`
+	// Parameter with num_values and allow_negative_numbers
+	Range []int `+"`omniarg:\"range type=array/int num_values=2 allow_negative_numbers=true placeholders=\\\"MIN MAX\\\"\"`"+`
 }`)
 
 	tests := []struct {
@@ -201,10 +201,11 @@ type ComplexCmd struct {
 					Leftovers:         true,
 				},
 				{
-					Name:        "--range",
-					Type:        "array/int",
-					NumValues:   "2",
-					Placeholder: "MIN MAX",
+					Name:                 "--range",
+					Type:                 "array/int",
+					NumValues:            "2",
+					Placeholders:         []string{"MIN", "MAX"},
+					AllowNegativeNumbers: true,
 				},
 			},
 		},
@@ -655,6 +656,68 @@ type Root struct {
 	}
 
 	assert.Equal(t, expectedParams, result.Syntax.Parameters)
+}
+
+func TestBasicGroupType(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "generator-basic-group-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	writeTestFile(t, tmpDir, "basic_group.go", `
+package testpkg
+
+type BasicGroupCmd struct {
+	// Simple string group without any tags
+	Strings [][]string
+	// Simple int group without any tags
+	Ints [][]int
+	// Simple float group without any tags
+	Floats [][]float64
+	// Simple bool group without any tags
+	Bools [][]bool
+}`)
+
+	generator, err := main.NewGenerator(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	result, err := generator.Generate("BasicGroupCmd")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedParams := []main.Parameter{
+		{
+			Name:             "--strings",
+			Type:             "array/str",
+			NumValues:        "1..",
+			GroupOccurrences: true,
+		},
+		{
+			Name:             "--ints",
+			Type:             "array/int",
+			NumValues:        "1..",
+			GroupOccurrences: true,
+		},
+		{
+			Name:             "--floats",
+			Type:             "array/float",
+			NumValues:        "1..",
+			GroupOccurrences: true,
+		},
+		{
+			Name:             "--bools",
+			Type:             "array/bool",
+			NumValues:        "1..",
+			GroupOccurrences: true,
+		},
+	}
+
+	assert.Equal(t, expectedParams, result.Syntax.Parameters,
+		"Parameter definition for basic [][]string should match expected")
 }
 
 // Helper function to write test files
