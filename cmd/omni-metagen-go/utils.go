@@ -86,32 +86,54 @@ func parseStructTags(doc *ast.CommentGroup) (options map[string]interface{}) {
 	return options
 }
 
-// inferType infers the parameter type from a Go AST expression
-func inferType(expr ast.Expr) string {
+func inferType(expr ast.Expr) (string, bool, error) {
+	baseType, nestLevel, err := inferTypeWithNesting(expr, 0)
+	if err != nil {
+		return "", false, err
+	}
+
+	if nestLevel > 2 {
+		return "", false, fmt.Errorf("too many nested arrays")
+	}
+
+	if nestLevel > 0 {
+		if baseType == "flag" {
+			// Arrays of flags are not supported, but arrays of bools are
+			baseType = "bool"
+		} else if baseType == "counter" {
+			return "", false, fmt.Errorf("arrays of counters are not supported")
+		}
+
+		groupOccurrences := nestLevel > 1
+		baseType = fmt.Sprintf("array/%s", baseType)
+		return baseType, groupOccurrences, nil
+	}
+
+	return baseType, false, nil
+}
+
+// inferTypeWithNesting infers the parameter type from a Go AST expression
+func inferTypeWithNesting(expr ast.Expr, nestLevel int) (string, int, error) {
 	switch t := expr.(type) {
 	case *ast.Ident:
 		switch t.Name {
 		case "bool":
-			return "flag" // Default bool to flag
+			return "flag", nestLevel, nil // Default bool to flag
 		case "string":
-			return "str"
+			return "str", nestLevel, nil
 		case "int", "int8", "int16", "int32", "int64":
-			return "int"
+			return "int", nestLevel, nil
 		case "float32", "float64":
-			return "float"
+			return "float", nestLevel, nil
 		default:
-			return "str"
+			return "", nestLevel, fmt.Errorf("unsupported type %s", t.Name)
 		}
 	case *ast.ArrayType:
-		baseType := inferType(t.Elt)
-		if baseType == "flag" || baseType == "counter" {
-			return "str" // Arrays of flags or counters not allowed, default to string
-		}
-		return fmt.Sprintf("array/%s", baseType)
+		return inferTypeWithNesting(t.Elt, nestLevel+1)
 	case *ast.StarExpr:
-		return inferType(t.X)
+		return inferTypeWithNesting(t.X, nestLevel)
 	default:
-		return "str"
+		return "", nestLevel, fmt.Errorf("unsupported type %T", t)
 	}
 }
 

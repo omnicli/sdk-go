@@ -146,5 +146,3 @@ func TestOptionalValues(t *testing.T) {
 		t.Error("Expected nil float pointer for unset value")
 	}
 }
-
-// More type-specific tests to follow...

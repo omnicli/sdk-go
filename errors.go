@@ -1,6 +1,9 @@
 package omnicli
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // ArgListMissingError is returned when the OMNI_ARG_LIST environment variable is missing.
 type ArgListMissingError struct{}
@@ -8,6 +11,30 @@ type ArgListMissingError struct{}
 func (e *ArgListMissingError) Error() string {
 	return "OMNI_ARG_LIST environment variable is not set. " +
 		"Are you sure \"argparser: true\" is set for this command?"
+}
+
+// ArgTypeMissingError is returned when the OMNI_ARG_<argname>_TYPE environment variable is missing.
+type ArgTypeMissingError struct {
+	argName string
+	index   *int
+}
+
+func (e *ArgTypeMissingError) Error() string {
+	varName := fmt.Sprintf("OMNI_ARG_%s_TYPE", strings.ToUpper(e.argName))
+	if e.index != nil {
+		varName = fmt.Sprintf("%s_%d", varName, *e.index)
+	}
+	return fmt.Sprintf("%s environment variable is not set", varName)
+}
+
+// InvalidTypeStringError is returned when the OMNI_ARG_<argname>_TYPE environment variable is not
+// one of the supported types.
+type InvalidTypeStringError struct {
+	typeStr string
+}
+
+func (e *InvalidTypeStringError) Error() string {
+	return fmt.Sprintf("invalid type string: %q", e.typeStr)
 }
 
 // TypeMismatchError is returned when an argument's type doesn't match the struct field

@@ -1,38 +1,13 @@
 package main_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 
 	main "github.com/omnicli/sdk-go/cmd/omni-metagen-go"
+	"github.com/stretchr/testify/assert"
 )
-
-func compareParameters(t *testing.T, got, want []main.Parameter) {
-	if !reflect.DeepEqual(got, want) {
-		errorMsg := "parameters don't match"
-		if len(got) != len(want) {
-			errorMsg += fmt.Sprintf("\nexpected length: %d, got: %d", len(want), len(got))
-		}
-		for i, param := range got {
-			if i >= len(want) {
-				errorMsg += fmt.Sprintf("\n\nExtra parameter: %+v", param)
-				continue
-			}
-
-			if !reflect.DeepEqual(param, want[i]) {
-				errorMsg += fmt.Sprintf("\n\nIndex: %d\nGot: %+v\nWant: %+v", i, param, want[i])
-			}
-		}
-		for i := len(got); i < len(want); i++ {
-			errorMsg += fmt.Sprintf("\n\nMissing parameter: %+v", want[i])
-		}
-
-		t.Error(errorMsg)
-	}
-}
 
 func TestGenerator(t *testing.T) {
 	// Create a temporary directory for our test files
@@ -48,9 +23,9 @@ package testpkg
 
 // BasicCmd demonstrates a simple command structure
 //
-// @omniarg autocompletion=true
-// @omniarg category=test,example
-// @omniarg help="This is a test command"
+// @autocompletion true
+// @category test, example
+// @help This is a test command
 type BasicCmd struct {
 	// Basic string flag
 	Name string `+"`omniarg:\"desc=\\\"The name to use\\\" required=true\"`"+`
@@ -167,7 +142,7 @@ type BasicCmd struct {
 				return
 			}
 
-			compareParameters(t, result.Syntax.Parameters, tt.expectedResult.Syntax.Parameters)
+			assert.Equal(t, tt.expectedResult, result)
 		})
 	}
 }
@@ -193,8 +168,8 @@ type ComplexCmd struct {
 	// Parameter with allow_hyphen_values
 	Args []string `+"`omniarg:\"args type=array/string allow_hyphen_values=true leftovers=true\"`"+`
 
-	// Parameter with num_values
-	Range []int `+"`omniarg:\"range type=array/int num_values=2 placeholder=\\\"MIN MAX\\\"\"`"+`
+	// Parameter with num_values and allow_negative_numbers
+	Range []int `+"`omniarg:\"range type=array/int num_values=2 allow_negative_numbers=true placeholders=\\\"MIN MAX\\\"\"`"+`
 }`)
 
 	tests := []struct {
@@ -226,10 +201,11 @@ type ComplexCmd struct {
 					Leftovers:         true,
 				},
 				{
-					Name:        "--range",
-					Type:        "array/int",
-					NumValues:   "2",
-					Placeholder: "MIN MAX",
+					Name:                 "--range",
+					Type:                 "array/int",
+					NumValues:            "2",
+					Placeholders:         []string{"MIN", "MAX"},
+					AllowNegativeNumbers: true,
 				},
 			},
 		},
@@ -247,7 +223,7 @@ type ComplexCmd struct {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			compareParameters(t, result.Syntax.Parameters, tt.expectedParams)
+			assert.Equal(t, tt.expectedParams, result.Syntax.Parameters)
 		})
 	}
 }
@@ -366,7 +342,7 @@ type Config struct {
 		},
 	}
 
-	compareParameters(t, result.Syntax.Parameters, expectedParams)
+	assert.Equal(t, expectedParams, result.Syntax.Parameters)
 }
 
 func TestEmbeddedStructWithTag(t *testing.T) {
@@ -414,7 +390,7 @@ type Config struct {
 		},
 	}
 
-	compareParameters(t, result.Syntax.Parameters, expectedParams)
+	assert.Equal(t, expectedParams, result.Syntax.Parameters)
 }
 
 func TestEmbeddedPointerStruct(t *testing.T) {
@@ -462,7 +438,7 @@ type Config struct {
 		},
 	}
 
-	compareParameters(t, result.Syntax.Parameters, expectedParams)
+	assert.Equal(t, expectedParams, result.Syntax.Parameters)
 }
 
 func TestEmbeddedPointerStructWithTag(t *testing.T) {
@@ -510,7 +486,7 @@ type Config struct {
 		},
 	}
 
-	compareParameters(t, result.Syntax.Parameters, expectedParams)
+	assert.Equal(t, expectedParams, result.Syntax.Parameters)
 }
 
 func TestStructField(t *testing.T) {
@@ -569,7 +545,7 @@ type Config struct {
 		},
 	}
 
-	compareParameters(t, result.Syntax.Parameters, expectedParams)
+	assert.Equal(t, expectedParams, result.Syntax.Parameters)
 }
 
 func TestStructPointerField(t *testing.T) {
@@ -628,7 +604,7 @@ type Config struct {
 		},
 	}
 
-	compareParameters(t, result.Syntax.Parameters, expectedParams)
+	assert.Equal(t, expectedParams, result.Syntax.Parameters)
 }
 
 func TestStackedStructs(t *testing.T) {
@@ -679,7 +655,69 @@ type Root struct {
 		},
 	}
 
-	compareParameters(t, result.Syntax.Parameters, expectedParams)
+	assert.Equal(t, expectedParams, result.Syntax.Parameters)
+}
+
+func TestBasicGroupType(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "generator-basic-group-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	writeTestFile(t, tmpDir, "basic_group.go", `
+package testpkg
+
+type BasicGroupCmd struct {
+	// Simple string group without any tags
+	Strings [][]string
+	// Simple int group without any tags
+	Ints [][]int
+	// Simple float group without any tags
+	Floats [][]float64
+	// Simple bool group without any tags
+	Bools [][]bool
+}`)
+
+	generator, err := main.NewGenerator(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	result, err := generator.Generate("BasicGroupCmd")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedParams := []main.Parameter{
+		{
+			Name:             "--strings",
+			Type:             "array/str",
+			NumValues:        "1..",
+			GroupOccurrences: true,
+		},
+		{
+			Name:             "--ints",
+			Type:             "array/int",
+			NumValues:        "1..",
+			GroupOccurrences: true,
+		},
+		{
+			Name:             "--floats",
+			Type:             "array/float",
+			NumValues:        "1..",
+			GroupOccurrences: true,
+		},
+		{
+			Name:             "--bools",
+			Type:             "array/bool",
+			NumValues:        "1..",
+			GroupOccurrences: true,
+		},
+	}
+
+	assert.Equal(t, expectedParams, result.Syntax.Parameters,
+		"Parameter definition for basic [][]string should match expected")
 }
 
 // Helper function to write test files

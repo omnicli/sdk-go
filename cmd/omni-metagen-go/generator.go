@@ -31,7 +31,10 @@ func NewGenerator(dir string) (*Generator, error) {
 
 // Generate generates metadata for the given struct
 func (g *Generator) Generate(structName string) (*CommandMetadata, error) {
-	metadata := g.findStructMetadata(structName)
+	metadata, err := g.findStructMetadata(structName)
+	if err != nil {
+		return nil, err
+	}
 	if metadata == nil {
 		return nil, fmt.Errorf("struct %s not found", structName)
 	}
@@ -39,10 +42,10 @@ func (g *Generator) Generate(structName string) (*CommandMetadata, error) {
 }
 
 // findStructMetadata locates and parses the struct metadata
-func (g *Generator) findStructMetadata(structName string) *CommandMetadata {
+func (g *Generator) findStructMetadata(structName string) (*CommandMetadata, error) {
 	st := g.findStructType(structName)
 	if st == nil {
-		return nil
+		return nil, nil
 	}
 
 	metadata := &CommandMetadata{
@@ -56,12 +59,15 @@ func (g *Generator) findStructMetadata(structName string) *CommandMetadata {
 		g.applyStructTags(metadata, structTags)
 	}
 
-	parameters := g.parseParameters(st.Fields.List, "")
+	parameters, err := g.parseParameters(st.Fields.List, "")
+	if err != nil {
+		return nil, err
+	}
 	if len(parameters) > 0 {
 		metadata.Syntax = Syntax{Parameters: parameters}
 	}
 
-	return metadata
+	return metadata, nil
 }
 
 // findStructType looks up a struct definition across all files in the packages
@@ -120,13 +126,17 @@ func (g *Generator) findStructDocs(typeName string) *ast.CommentGroup {
 }
 
 // parseParameters parses all parameters from a list of fields
-func (g *Generator) parseParameters(fieldsList []*ast.Field, prefix string) (parameters []Parameter) {
-	parameters = make([]Parameter, 0)
+func (g *Generator) parseParameters(fieldsList []*ast.Field, prefix string) ([]Parameter, error) {
+	parameters := make([]Parameter, 0)
 
 outerLoop:
 	for _, field := range fieldsList {
 		// Handle struct fields (both named types and inline structs)
-		if nestedParams := g.handleEmbeddedStruct(field, prefix); nestedParams != nil {
+		nestedParams, err := g.handleEmbeddedStruct(field, prefix)
+		if err != nil {
+			return nil, fmt.Errorf("Error handling embedded struct: %w", err)
+		}
+		if nestedParams != nil {
 			parameters = append(parameters, nestedParams...)
 			continue
 		}
@@ -160,21 +170,36 @@ outerLoop:
 			// Make sure the parameter name is lowercase
 			paramName = omniarg.SanitizeArgName(paramName, '-')
 			if paramName == "" {
-				continue
+				return nil, fmt.Errorf("Empty parameter name for field %s\n", fieldName.Name)
 			}
 
 			// Add the prefix
 			paramName = prefix + paramName
 
 			// Handle struct fields (both named types and inline structs)
-			if nestedParams := g.handleStructField(field, paramName); nestedParams != nil {
+			nestedParams, err := g.handleStructField(field, paramName)
+			if err != nil {
+				return nil, fmt.Errorf("error handling struct field %s: %w", fieldName.Name, err)
+			}
+			if nestedParams != nil {
 				parameters = append(parameters, nestedParams...)
 				continue
 			}
 
+			paramType, groupOccurrences, err := inferType(field.Type)
+			if err != nil {
+				return nil, fmt.Errorf("error inferring type for field %s: %w", fieldName.Name, err)
+			}
+
 			param := Parameter{
 				Name: paramName,
-				Type: inferType(field.Type),
+				Type: paramType,
+			}
+
+			// Add decent defaults if the type suggests we should group occurrences
+			if groupOccurrences {
+				param.GroupOccurrences = true
+				param.NumValues = "1.."
 			}
 
 			// If any options, apply them
@@ -196,13 +221,13 @@ outerLoop:
 		}
 	}
 
-	return
+	return parameters, nil
 }
 
-func (g *Generator) handleEmbeddedStruct(field *ast.Field, prefix string) []Parameter {
+func (g *Generator) handleEmbeddedStruct(field *ast.Field, prefix string) ([]Parameter, error) {
 	// Embedded structs are unnamed, so we return early if there are names
 	if len(field.Names) > 0 {
-		return nil
+		return nil, nil
 	}
 
 	structName := ""
@@ -210,7 +235,7 @@ func (g *Generator) handleEmbeddedStruct(field *ast.Field, prefix string) []Para
 		structName, _ = omniarg.ExtractAndParseTag(field.Tag.Value)
 	}
 	if structName == "-" {
-		return nil
+		return nil, nil
 	}
 
 	if structName == "" {
@@ -233,13 +258,13 @@ func (g *Generator) handleEmbeddedStruct(field *ast.Field, prefix string) []Para
 			return g.handleEmbeddedStruct(unwrapped, prefix)
 
 		default:
-			return nil
+			return nil, nil
 		}
 	}
 
 	structName = omniarg.SanitizeArgName(structName, '-')
 	if structName == "" {
-		return nil
+		return nil, fmt.Errorf("Empty struct name for field %s\n", field.Names[0].Name)
 	}
 	if prefix != "" {
 		structName = prefix + structName
@@ -249,7 +274,7 @@ func (g *Generator) handleEmbeddedStruct(field *ast.Field, prefix string) []Para
 }
 
 // handleStructField processes named struct fields (both named types and inline structs)
-func (g *Generator) handleStructField(field *ast.Field, paramName string) []Parameter {
+func (g *Generator) handleStructField(field *ast.Field, paramName string) ([]Parameter, error) {
 	// Get the struct fields based on the type
 	var structFields []*ast.Field
 
@@ -281,11 +306,11 @@ func (g *Generator) handleStructField(field *ast.Field, paramName string) []Para
 
 	default:
 		// Not a struct type
-		return nil
+		return nil, nil
 	}
 
 	if structFields == nil {
-		return nil
+		return nil, nil
 	}
 
 	// Parse the struct's fields with the new prefix
@@ -306,8 +331,8 @@ func (g *Generator) applyOptions(param *Parameter, options map[string]interface{
 	if required, ok := options["required"].(bool); ok {
 		param.Required = required
 	}
-	if placeholder, ok := options["placeholder"].(string); ok {
-		param.Placeholder = placeholder
+	if placeholders, ok := options["placeholders"].([]string); ok {
+		param.Placeholders = placeholders
 	}
 	if typ, ok := options["type"].(string); ok {
 		param.Type = typ
@@ -318,8 +343,14 @@ func (g *Generator) applyOptions(param *Parameter, options map[string]interface{
 	if def, ok := options["default"]; ok {
 		param.Default = def
 	}
+	if defMissing, ok := options["default_missing_value"]; ok {
+		param.DefaultMissingValue = defMissing
+	}
 	if numVal, ok := options["num_values"].(string); ok {
 		param.NumValues = numVal
+	}
+	if groupOcc, ok := options["group_occurrences"].(bool); ok {
+		param.GroupOccurrences = groupOcc
 	}
 	if delimiter, ok := options["delimiter"].(string); ok {
 		param.Delimiter = delimiter
@@ -332,6 +363,9 @@ func (g *Generator) applyOptions(param *Parameter, options map[string]interface{
 	}
 	if allowHyphen, ok := options["allow_hyphen_values"].(bool); ok {
 		param.AllowHyphenValues = allowHyphen
+	}
+	if allowNeg, ok := options["allow_negative_numbers"].(bool); ok {
+		param.AllowNegativeNumbers = allowNeg
 	}
 	if requires, ok := options["requires"].([]string); ok {
 		param.Requires = requires

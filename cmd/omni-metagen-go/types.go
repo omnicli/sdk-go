@@ -25,26 +25,29 @@ type (
 
 	// Parameter represents a single command parameter
 	Parameter struct {
-		Name               string                 `yaml:"name"`
-		Aliases            []string               `yaml:"aliases,omitempty"`
-		Description        string                 `yaml:"desc,omitempty"`
-		Positional         bool                   `yaml:"positional,omitempty"`
-		Required           bool                   `yaml:"required,omitempty"`
-		Placeholder        string                 `yaml:"placeholder,omitempty"`
-		Type               string                 `yaml:"type"`
-		Values             []string               `yaml:"values,omitempty"`
-		Default            interface{}            `yaml:"default,omitempty"`
-		NumValues          string                 `yaml:"num_values,omitempty"`
-		Delimiter          string                 `yaml:"delimiter,omitempty"`
-		Last               bool                   `yaml:"last,omitempty"`
-		Leftovers          bool                   `yaml:"leftovers,omitempty"`
-		AllowHyphenValues  bool                   `yaml:"allow_hyphen_values,omitempty"`
-		Requires           []string               `yaml:"requires,omitempty"`
-		ConflictsWith      []string               `yaml:"conflicts_with,omitempty"`
-		RequiredWithout    []string               `yaml:"required_without,omitempty"`
-		RequiredWithoutAll []string               `yaml:"required_without_all,omitempty"`
-		RequiredIfEq       map[string]interface{} `yaml:"required_if_eq,omitempty"`
-		RequiredIfEqAll    map[string]interface{} `yaml:"required_if_eq_all,omitempty"`
+		Name                 string                 `yaml:"name"`
+		Aliases              []string               `yaml:"aliases,omitempty"`
+		Description          string                 `yaml:"desc,omitempty"`
+		Positional           bool                   `yaml:"positional,omitempty"`
+		Required             bool                   `yaml:"required,omitempty"`
+		Placeholders         []string               `yaml:"placeholders,omitempty"`
+		Type                 string                 `yaml:"type"`
+		Values               []string               `yaml:"values,omitempty"`
+		Default              interface{}            `yaml:"default,omitempty"`
+		DefaultMissingValue  interface{}            `yaml:"default_missing_value,omitempty"`
+		NumValues            string                 `yaml:"num_values,omitempty"`
+		GroupOccurrences     bool                   `yaml:"group_occurrences,omitempty"`
+		Delimiter            string                 `yaml:"delimiter,omitempty"`
+		Last                 bool                   `yaml:"last,omitempty"`
+		Leftovers            bool                   `yaml:"leftovers,omitempty"`
+		AllowHyphenValues    bool                   `yaml:"allow_hyphen_values,omitempty"`
+		AllowNegativeNumbers bool                   `yaml:"allow_negative_numbers,omitempty"`
+		Requires             []string               `yaml:"requires,omitempty"`
+		ConflictsWith        []string               `yaml:"conflicts_with,omitempty"`
+		RequiredWithout      []string               `yaml:"required_without,omitempty"`
+		RequiredWithoutAll   []string               `yaml:"required_without_all,omitempty"`
+		RequiredIfEq         map[string]interface{} `yaml:"required_if_eq,omitempty"`
+		RequiredIfEqAll      map[string]interface{} `yaml:"required_if_eq_all,omitempty"`
 	}
 
 	// Group represents a group of parameters
