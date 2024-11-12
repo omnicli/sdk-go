@@ -60,21 +60,37 @@ func (c floatConverter) Convert(s string) (float64, error) {
 	return val, nil
 }
 
+// typeInfo stores information about the type of an argument.
+type typeInfo struct {
+	rawType   string
+	baseType  string
+	sliceSize int
+	isSlice   bool
+	isGroup   bool
+}
+
 // Args represents the parsed arguments with type-specific storage.
 // Each map stores pointers to values, where nil indicates a declared but unset value.
 type Args struct {
 	// Track declared arguments and their types
-	declaredArgs map[string]string // maps arg name to its type
+	declaredArgs map[string]*typeInfo
 
 	// Store values as pointers - nil means declared but not set
-	strings      map[string]*string
-	bools        map[string]*bool
-	ints         map[string]*int
-	floats       map[string]*float64
+	// Single values
+	strings map[string]*string
+	bools   map[string]*bool
+	ints    map[string]*int
+	floats  map[string]*float64
+	// Slice values
 	stringSlices map[string][]*string
 	boolSlices   map[string][]*bool
 	intSlices    map[string][]*int
 	floatSlices  map[string][]*float64
+	// Grouped values, so each entry is a slice of slices
+	stringGroups map[string][][]*string
+	boolGroups   map[string][][]*bool
+	intGroups    map[string][][]*int
+	floatGroups  map[string][][]*float64
 }
 
 // NewArgs creates a new Args instance with initialized maps.
@@ -82,7 +98,7 @@ type Args struct {
 // and return an Args instance.
 func NewArgs() *Args {
 	return &Args{
-		declaredArgs: make(map[string]string),
+		declaredArgs: make(map[string]*typeInfo),
 		strings:      make(map[string]*string),
 		bools:        make(map[string]*bool),
 		ints:         make(map[string]*int),
@@ -91,134 +107,144 @@ func NewArgs() *Args {
 		boolSlices:   make(map[string][]*bool),
 		intSlices:    make(map[string][]*int),
 		floatSlices:  make(map[string][]*float64),
+		stringGroups: make(map[string][][]*string),
+		boolGroups:   make(map[string][][]*bool),
+		intGroups:    make(map[string][][]*int),
+		floatGroups:  make(map[string][][]*float64),
 	}
+}
+
+// Generic function to get a single value
+func getSingle[T any](name string, values map[string]*T, defaultValue T) (T, bool) {
+	ptr, ok := values[strings.ToLower(name)]
+	if !ok || ptr == nil {
+		return defaultValue, ok
+	}
+	return *ptr, true
+}
+
+// Generic function to get a slice
+func getSlice[T any](name string, slices map[string][]*T, defaultValue T) ([]T, bool) {
+	ptr, ok := slices[strings.ToLower(name)]
+	if !ok {
+		return nil, ok
+	} else if ptr == nil {
+		return make([]T, 0), ok
+	}
+	result := make([]T, len(ptr))
+	for i, p := range ptr {
+		if p == nil {
+			result[i] = defaultValue
+		} else {
+			result[i] = *p
+		}
+	}
+	return result, true
+}
+
+// Generic function to get groups
+func getGroups[T any](name string, groups map[string][][]*T, defaultValue T) ([][]T, bool) {
+	ptr, ok := groups[strings.ToLower(name)]
+	if !ok {
+		return nil, ok
+	} else if ptr == nil {
+		return make([][]T, 0), ok
+	}
+	result := make([][]T, len(ptr))
+	for i, p := range ptr {
+		if p == nil {
+			result[i] = make([]T, 0)
+		} else {
+			result[i] = make([]T, len(p))
+			for j, q := range p {
+				if q == nil {
+					result[i][j] = defaultValue
+				} else {
+					result[i][j] = *q
+				}
+			}
+		}
+	}
+	return result, true
 }
 
 // GetString returns a string value and whether it exists.
 // The boolean return value indicates whether the argument exists and is set.
 func (a *Args) GetString(name string) (string, bool) {
-	ptr, ok := a.strings[strings.ToLower(name)]
-	if !ok || ptr == nil {
-		return "", ok
-	}
-	return *ptr, true
+	return getSingle(name, a.strings, "")
 }
 
 // GetBool returns a bool value and whether it exists.
 // The boolean return value indicates whether the argument exists and is set.
 func (a *Args) GetBool(name string) (bool, bool) {
-	ptr, ok := a.bools[strings.ToLower(name)]
-	if !ok || ptr == nil {
-		return false, ok
-	}
-	return *ptr, true
+	return getSingle(name, a.bools, false)
 }
 
 // GetInt returns an int value and whether it exists.
 // The boolean return value indicates whether the argument exists and is set.
 func (a *Args) GetInt(name string) (int, bool) {
-	ptr, ok := a.ints[strings.ToLower(name)]
-	if !ok || ptr == nil {
-		return 0, ok
-	}
-	return *ptr, true
+	return getSingle(name, a.ints, 0)
 }
 
 // GetFloat returns a float value and whether it exists.
 // The boolean return value indicates whether the argument exists and is set.
 func (a *Args) GetFloat(name string) (float64, bool) {
-	ptr, ok := a.floats[strings.ToLower(name)]
-	if !ok || ptr == nil {
-		return 0, ok
-	}
-	return *ptr, true
+	return getSingle(name, a.floats, 0)
 }
 
 // GetStringSlice returns a slice of string values and whether it exists.
 // The boolean return value indicates whether the argument exists and is set.
 func (a *Args) GetStringSlice(name string) ([]string, bool) {
-	ptr, ok := a.stringSlices[strings.ToLower(name)]
-	if !ok {
-		return nil, ok
-	} else if ptr == nil {
-		return make([]string, 0), ok
-	}
-	result := make([]string, len(ptr))
-	for i, p := range ptr {
-		if p == nil {
-			result[i] = ""
-		} else {
-			result[i] = *p
-		}
-	}
-	return result, true
+	return getSlice(name, a.stringSlices, "")
 }
 
 // GetBoolSlice returns a slice of bool values and whether it exists.
 // The boolean return value indicates whether the argument exists and is set.
 func (a *Args) GetBoolSlice(name string) ([]bool, bool) {
-	ptr, ok := a.boolSlices[strings.ToLower(name)]
-	if !ok {
-		return nil, ok
-	} else if ptr == nil {
-		return make([]bool, 0), ok
-	}
-	result := make([]bool, len(ptr))
-	for i, p := range ptr {
-		if p == nil {
-			result[i] = false
-		} else {
-			result[i] = *p
-		}
-	}
-	return result, true
+	return getSlice(name, a.boolSlices, false)
 }
 
 // GetIntSlice returns a slice of int values and whether it exists.
 // The boolean return value indicates whether the argument exists and is set.
 func (a *Args) GetIntSlice(name string) ([]int, bool) {
-	ptr, ok := a.intSlices[strings.ToLower(name)]
-	if !ok {
-		return nil, ok
-	} else if ptr == nil {
-		return make([]int, 0), ok
-	}
-	result := make([]int, len(ptr))
-	for i, p := range ptr {
-		if p == nil {
-			result[i] = 0
-		} else {
-			result[i] = *p
-		}
-	}
-	return result, true
+	return getSlice(name, a.intSlices, 0)
 }
 
 // GetFloatSlice returns a slice of float values and whether it exists.
 // The boolean return value indicates whether the argument exists and is set.
 func (a *Args) GetFloatSlice(name string) ([]float64, bool) {
-	ptr, ok := a.floatSlices[strings.ToLower(name)]
-	if !ok {
-		return nil, ok
-	} else if ptr == nil {
-		return make([]float64, 0), ok
-	}
-	result := make([]float64, len(ptr))
-	for i, p := range ptr {
-		if p == nil {
-			result[i] = 0
-		} else {
-			result[i] = *p
-		}
-	}
-	return result, true
+	return getSlice(name, a.floatSlices, 0)
+}
+
+// GetStringGroups returns a slice of slices of string values and whether it exists.
+// The boolean return value indicates whether the argument exists and is set.
+func (a *Args) GetStringGroups(name string) ([][]string, bool) {
+	return getGroups(name, a.stringGroups, "")
+}
+
+// GetBoolGroups returns a slice of slices of bool values and whether it exists.
+// The boolean return value indicates whether the argument exists and is set.
+func (a *Args) GetBoolGroups(name string) ([][]bool, bool) {
+	return getGroups(name, a.boolGroups, false)
+}
+
+// GetIntGroups returns a slice of slices of int values and whether it exists.
+// The boolean return value indicates whether the argument exists and is set.
+func (a *Args) GetIntGroups(name string) ([][]int, bool) {
+	return getGroups(name, a.intGroups, 0)
+}
+
+// GetFloatGroups returns a slice of slices of float values and whether it exists.
+// The boolean return value indicates whether the argument exists and is set.
+func (a *Args) GetFloatGroups(name string) ([][]float64, bool) {
+	return getGroups(name, a.floatGroups, 0)
 }
 
 // GetAllArgs returns all declared arguments
 func (a *Args) GetAllArgs() map[string]interface{} {
 	result := make(map[string]interface{})
-	for name, typ := range a.declaredArgs {
-		switch typ {
+	for name, typeInfo := range a.declaredArgs {
+		switch typeInfo.baseType {
 		case "bool":
 			if val, ok := a.GetBool(name); ok {
 				result[name] = val
@@ -242,16 +268,59 @@ func (a *Args) GetAllArgs() map[string]interface{} {
 
 // parseTypeInfo parses the type string into base type and indicates if it's a slice.
 // Returns baseType, arraySize, hasSize where hasSize indicates if a size was specified (even if it's 0).
-func parseTypeInfo(typeStr string) (string, int, bool) {
+func parseTypeInfo(typeStr string) (*typeInfo, error) {
 	parts := strings.Split(typeStr, "/")
-	if len(parts) == 2 {
-		size, err := strconv.Atoi(parts[1])
-		if err != nil {
-			return parts[0], 0, false
-		}
-		return parts[0], size, true
+	if len(parts) > 3 {
+		return nil, &InvalidTypeStringError{typeStr}
 	}
-	return typeStr, 0, false
+
+	baseType := parts[0]
+	isSlice := len(parts) > 1
+	isGroup := len(parts) > 2
+
+	var sliceSize int
+	if isSlice {
+		convertedSliceSize, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return nil, &InvalidTypeStringError{typeStr}
+		}
+		sliceSize = convertedSliceSize
+	}
+
+	if isGroup {
+		if _, err := strconv.Atoi(parts[2]); err != nil {
+			return nil, &InvalidTypeStringError{typeStr}
+		}
+	}
+
+	return &typeInfo{
+		rawType:   typeStr,
+		baseType:  baseType,
+		sliceSize: sliceSize,
+		isSlice:   isSlice,
+		isGroup:   isGroup,
+	}, nil
+}
+
+// getArgType returns the declared type of an argument.
+func getArgType(name string, index *int) (*typeInfo, error) {
+	keyParts := []string{"OMNI_ARG", strings.ToUpper(name), "TYPE"}
+	if index != nil {
+		keyParts = append(keyParts, fmt.Sprintf("%d", *index))
+	}
+	key := strings.Join(keyParts, "_")
+
+	typeStr, exists := os.LookupEnv(key)
+	if !exists {
+		return nil, &ArgTypeMissingError{name, index}
+	}
+
+	typeInfo, err := parseTypeInfo(typeStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return typeInfo, nil
 }
 
 // getArgList gets the list of available arguments from OMNI_ARG_LIST environment variable.
@@ -272,14 +341,17 @@ func getArgList() ([]string, error) {
 func getArgValue[T any](
 	argName string,
 	index *int,
+	group_index *int,
 	converter typeConverter[T],
 ) (*T, error) {
-	var key string
+	keyParts := []string{"OMNI_ARG", strings.ToUpper(argName), "VALUE"}
 	if index != nil {
-		key = fmt.Sprintf("OMNI_ARG_%s_VALUE_%d", strings.ToUpper(argName), *index)
-	} else {
-		key = fmt.Sprintf("OMNI_ARG_%s_VALUE", strings.ToUpper(argName))
+		keyParts = append(keyParts, fmt.Sprintf("%d", *index))
 	}
+	if group_index != nil {
+		keyParts = append(keyParts, fmt.Sprintf("%d", *group_index))
+	}
+	key := strings.Join(keyParts, "_")
 
 	value, exists := os.LookupEnv(key)
 	if !exists {
@@ -297,45 +369,109 @@ func getArgValue[T any](
 func handleValue[T any](
 	args *Args,
 	argName string,
-	isSlice bool,
-	arraySize int,
+	typeInfo *typeInfo,
 	converter typeConverter[T],
 	storeSingle func(*Args, string, *T),
 	storeSlice func(*Args, string, []*T),
+	storeGroup func(*Args, string, [][]*T),
 ) error {
-	if isSlice {
-		values := make([]*T, arraySize)
-		if arraySize > 0 {
-			for i := 0; i < arraySize; i++ {
-				idx := i
-				val, err := getArgValue(argName, &idx, converter)
-				if err != nil {
-					return err
-				}
-				values[i] = val // val might be nil, which is what we want
-			}
-		}
-		storeSlice(args, argName, values)
-	} else {
-		val, err := getArgValue(argName, nil, converter)
+	if typeInfo.isGroup {
+		return handleGroupValue(args, argName, typeInfo.sliceSize, converter, storeGroup)
+	}
+
+	if typeInfo.isSlice {
+		return handleSliceValue(args, argName, typeInfo.sliceSize, converter, storeSlice)
+	}
+
+	return handleSingleValue(args, argName, converter, storeSingle)
+}
+
+func handleSingleValue[T any](
+	args *Args,
+	argName string,
+	converter typeConverter[T],
+	storeSingle func(*Args, string, *T),
+) error {
+	val, err := getArgValue(argName, nil, nil, converter)
+	if err != nil {
+		return err
+	}
+	storeSingle(args, argName, val)
+	return nil
+}
+
+func handleSliceValue[T any](
+	args *Args,
+	argName string,
+	sliceSize int,
+	converter typeConverter[T],
+	storeSlice func(*Args, string, []*T),
+) error {
+	values := make([]*T, sliceSize)
+	for i := 0; i < sliceSize; i++ {
+		idx := i
+
+		val, err := getArgValue(argName, &idx, nil, converter)
 		if err != nil {
 			return err
 		}
-		storeSingle(args, argName, val)
+
+		values[i] = val // val might be nil, which is what we want
 	}
+	storeSlice(args, argName, values)
+	return nil
+}
+
+func handleGroupValue[T any](
+	args *Args,
+	argName string,
+	sliceSize int,
+	converter typeConverter[T],
+	storeGroup func(*Args, string, [][]*T),
+) error {
+	values := make([][]*T, sliceSize)
+	for i := 0; i < sliceSize; i++ {
+		idx := i
+
+		groupTypeInfo, err := getArgType(argName, &idx)
+		if err != nil {
+			return err
+		}
+		groupSize := groupTypeInfo.sliceSize
+
+		groupValues := make([]*T, groupSize)
+		for j := 0; j < groupSize; j++ {
+			groupIdx := j
+
+			val, err := getArgValue(argName, &idx, &groupIdx, converter)
+			if err != nil {
+				return err
+			}
+
+			groupValues[groupIdx] = val // val might be nil, which is what we want
+		}
+		values[i] = groupValues
+	}
+	storeGroup(args, argName, values)
 	return nil
 }
 
 // validateFieldType checks if the struct field type matches the declared argument type.
-func (a *Args) validateFieldType(field reflect.StructField, declaredType string) error {
+func (a *Args) validateFieldType(field reflect.StructField, typeInfo *typeInfo) error {
 	baseType := field.Type
-	isPtr := baseType.Kind() == reflect.Ptr
-	if isPtr {
-		baseType = baseType.Elem()
-	}
 
 	isSlice := baseType.Kind() == reflect.Slice
+	isGroup := false
 	if isSlice {
+		baseType = baseType.Elem()
+		if baseType.Kind() == reflect.Slice {
+			isGroup = true
+			baseType = baseType.Elem()
+		}
+	}
+
+	isPtr := baseType.Kind() == reflect.Ptr
+	if isPtr {
 		baseType = baseType.Elem()
 	}
 
@@ -350,20 +486,25 @@ func (a *Args) validateFieldType(field reflect.StructField, declaredType string)
 	case reflect.Float64:
 		expectedType = "float"
 	default:
-		return fmt.Errorf("unsupported field type: %v", baseType.Kind())
+		return fmt.Errorf("unsupported field type for %s: %v", field.Name, baseType.Kind())
 	}
 
-	parts := strings.Split(declaredType, "/")
-	if parts[0] != expectedType {
+	if typeInfo.baseType != expectedType {
 		return &TypeMismatchError{
 			fieldName:    field.Name,
 			expectedType: expectedType,
-			receivedType: parts[0],
+			receivedType: typeInfo.baseType,
 		}
 	}
 
-	hasSize := len(parts) > 1
-	if hasSize != isSlice {
+	if typeInfo.isGroup != isGroup {
+		if isGroup {
+			return fmt.Errorf("field %q is for grouped occurrences but argument is not", field.Name)
+		}
+		return fmt.Errorf("field %q is not for grouped occurrences but argument is", field.Name)
+	}
+
+	if typeInfo.isSlice != isSlice {
 		if isSlice {
 			return fmt.Errorf("field %q is a slice but argument is not", field.Name)
 		}
@@ -446,16 +587,17 @@ func (a *Args) Fill(v interface{}, prefix ...string) error {
 			continue
 		}
 
+		// TODO: REMOVE DEBUG
 		fmt.Printf("argName: %s\n", argName)
 		fmt.Printf("declaredArgs: %+v\n", a.declaredArgs)
 
-		declaredType, exists := a.declaredArgs[argName]
+		typeInfo, exists := a.declaredArgs[argName]
 		if !exists {
 			return fmt.Errorf("error in %s: field %q: parameter %q not found",
 				structType.Name(), fieldType.Name, argName)
 		}
 
-		if err := a.validateFieldType(fieldType, declaredType); err != nil {
+		if err := a.validateFieldType(fieldType, typeInfo); err != nil {
 			switch e := err.(type) {
 			case *TypeMismatchError:
 				return fmt.Errorf("error in %s: field %q has wrong type (expected %s, got %s)",
@@ -501,40 +643,42 @@ func ParseArgs(targets ...interface{}) (*Args, error) {
 	args := NewArgs()
 
 	for _, argName := range argList {
-		// Get type from OMNI_ARG_X_TYPE env var, default to "str"
-		typeStr, exists := os.LookupEnv(fmt.Sprintf("OMNI_ARG_%s_TYPE", strings.ToUpper(argName)))
-		if !exists {
-			typeStr = "str"
+		typeInfo, err := getArgType(argName, nil)
+		if err != nil {
+			return nil, err
 		}
 
-		args.declaredArgs[argName] = typeStr
-		baseType, arraySize, isSlice := parseTypeInfo(typeStr)
+		args.declaredArgs[argName] = typeInfo
 
 		// Default to string type for unknown types
-		switch baseType {
+		switch typeInfo.baseType {
 		case "bool":
-			err = handleValue[bool](args, argName, isSlice, arraySize,
+			err = handleValue[bool](args, argName, typeInfo,
 				boolConverter{},
 				func(a *Args, name string, val *bool) { a.bools[name] = val },
-				func(a *Args, name string, val []*bool) { a.boolSlices[name] = val })
+				func(a *Args, name string, val []*bool) { a.boolSlices[name] = val },
+				func(a *Args, name string, val [][]*bool) { a.boolGroups[name] = val })
 
 		case "int":
-			err = handleValue[int](args, argName, isSlice, arraySize,
+			err = handleValue[int](args, argName, typeInfo,
 				intConverter{},
 				func(a *Args, name string, val *int) { a.ints[name] = val },
-				func(a *Args, name string, val []*int) { a.intSlices[name] = val })
+				func(a *Args, name string, val []*int) { a.intSlices[name] = val },
+				func(a *Args, name string, val [][]*int) { a.intGroups[name] = val })
 
 		case "float":
-			err = handleValue[float64](args, argName, isSlice, arraySize,
+			err = handleValue[float64](args, argName, typeInfo,
 				floatConverter{},
 				func(a *Args, name string, val *float64) { a.floats[name] = val },
-				func(a *Args, name string, val []*float64) { a.floatSlices[name] = val })
+				func(a *Args, name string, val []*float64) { a.floatSlices[name] = val },
+				func(a *Args, name string, val [][]*float64) { a.floatGroups[name] = val })
 
 		default: // Including "str" and any unknown types
-			err = handleValue[string](args, argName, isSlice, arraySize,
+			err = handleValue[string](args, argName, typeInfo,
 				stringConverter{},
 				func(a *Args, name string, val *string) { a.strings[name] = val },
-				func(a *Args, name string, val []*string) { a.stringSlices[name] = val })
+				func(a *Args, name string, val []*string) { a.stringSlices[name] = val },
+				func(a *Args, name string, val [][]*string) { a.stringGroups[name] = val })
 		}
 
 		if err != nil {
@@ -555,36 +699,51 @@ func ParseArgs(targets ...interface{}) (*Args, error) {
 // fillField handles filling a single field with proper nil handling
 func (a *Args) fillField(field reflect.Value, argName string) error {
 	fieldType := field.Type()
+
+	isSlice := fieldType.Kind() == reflect.Slice
+	isGroup := false
+	if isSlice {
+		fieldType = fieldType.Elem()
+		if fieldType.Kind() == reflect.Slice {
+			isGroup = true
+			fieldType = fieldType.Elem()
+		}
+	}
+
+	isPtr := fieldType.Kind() == reflect.Ptr
+	if isPtr {
+		fieldType = fieldType.Elem()
+	}
+
 	kind := fieldType.Kind()
 
-	isTargetPtr := kind == reflect.Ptr
-	if isTargetPtr {
-		fieldType = fieldType.Elem()
-		kind = fieldType.Kind()
+	if isGroup {
+		return a.fillGroupField(field, kind, argName, isPtr)
 	}
 
-	if kind == reflect.Slice {
-		return a.fillSliceField(field, fieldType.Elem().Kind(), argName)
+	if isSlice {
+		return a.fillSliceField(field, kind, argName, isPtr)
 	}
 
-	return a.fillSingleField(field, kind, argName, isTargetPtr)
+	return a.fillSingleField(field, kind, argName, isPtr)
 }
 
 // fillSingleField handles single value fields
-func (a *Args) fillSingleField(field reflect.Value, kind reflect.Kind, argName string, isTargetPtr bool) error {
+func (a *Args) fillSingleField(field reflect.Value, elemKind reflect.Kind, argName string, isTargetPtr bool) error {
 	var parsedValue interface{}
 
-	switch kind {
+	switch elemKind {
 	case reflect.String:
 		parsedValue = a.strings[argName]
 	case reflect.Bool:
 		parsedValue = a.bools[argName]
-	case reflect.Int:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		parsedValue = a.ints[argName]
-	case reflect.Float64:
+	case reflect.Float32, reflect.Float64:
 		parsedValue = a.floats[argName]
 	default:
-		return fmt.Errorf("unsupported field type: %v", kind)
+		return fmt.Errorf("unsupported field type for %s: %v", argName, elemKind)
 	}
 
 	if parsedValue == nil {
@@ -609,7 +768,7 @@ func (a *Args) fillSingleField(field reflect.Value, kind reflect.Kind, argName s
 }
 
 // fillSliceField handles slice fields
-func (a *Args) fillSliceField(field reflect.Value, elemKind reflect.Kind, argName string) error {
+func (a *Args) fillSliceField(field reflect.Value, elemKind reflect.Kind, argName string, isTargetPtr bool) error {
 	var ptrSlice interface{}
 
 	switch elemKind {
@@ -617,12 +776,13 @@ func (a *Args) fillSliceField(field reflect.Value, elemKind reflect.Kind, argNam
 		ptrSlice = a.stringSlices[argName]
 	case reflect.Bool:
 		ptrSlice = a.boolSlices[argName]
-	case reflect.Int:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		ptrSlice = a.intSlices[argName]
-	case reflect.Float64:
+	case reflect.Float32, reflect.Float64:
 		ptrSlice = a.floatSlices[argName]
 	default:
-		return fmt.Errorf("unsupported slice element type: %v", elemKind)
+		return fmt.Errorf("unsupported field type for %s: %v", argName, elemKind)
 	}
 
 	if ptrSlice == nil {
@@ -640,14 +800,83 @@ func (a *Args) fillSliceField(field reflect.Value, elemKind reflect.Kind, argNam
 		if elemPtr == nil || reflect.ValueOf(elemPtr).IsNil() {
 			// For nil pointers, set zero value
 			newSlice.Index(i).Set(reflect.Zero(newSlice.Index(i).Type()))
+		} else if isTargetPtr {
+			// For pointer fields, set directly to the parsed value pointer
+			newSlice.Index(i).Set(reflect.ValueOf(elemPtr))
 		} else {
 			ptrValue := reflect.ValueOf(elemPtr)
 			if ptrValue.Kind() == reflect.Ptr && !ptrValue.IsNil() {
 				newSlice.Index(i).Set(ptrValue.Elem())
+			} else {
+				// If the pointer is nil, set to zero value
+				newSlice.Index(i).Set(reflect.Zero(newSlice.Index(i).Type()))
 			}
 		}
 	}
 
 	field.Set(newSlice)
+	return nil
+}
+
+// fillGroupField handles grouped slice fields
+func (a *Args) fillGroupField(field reflect.Value, elemKind reflect.Kind, argName string, isTargetPtr bool) error {
+	var groupSlice interface{}
+
+	switch elemKind {
+	case reflect.String:
+		groupSlice = a.stringGroups[argName]
+	case reflect.Bool:
+		groupSlice = a.boolGroups[argName]
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		groupSlice = a.intGroups[argName]
+	case reflect.Float32, reflect.Float64:
+		groupSlice = a.floatGroups[argName]
+	default:
+		return fmt.Errorf("unsupported field type for %s: %v", argName, elemKind)
+	}
+
+	if groupSlice == nil {
+		field.Set(reflect.MakeSlice(field.Type(), 0, 0))
+		return nil
+	}
+
+	// Create a new slice of slices of the appropriate type
+	groupVal := reflect.ValueOf(groupSlice)
+	newGroup := reflect.MakeSlice(field.Type(), groupVal.Len(), groupVal.Len())
+
+	// Copy values for each sub-slice
+	for i := 0; i < groupVal.Len(); i++ {
+		subSlice := groupVal.Index(i)
+		if subSlice.IsNil() {
+			newGroup.Index(i).Set(reflect.MakeSlice(field.Type().Elem(), 0, 0))
+			continue
+		}
+
+		newSubSlice := reflect.MakeSlice(field.Type().Elem(), subSlice.Len(), subSlice.Len())
+
+		for j := 0; j < subSlice.Len(); j++ {
+			elemPtr := subSlice.Index(j).Interface()
+			if elemPtr == nil || reflect.ValueOf(elemPtr).IsNil() {
+				// For nil pointers, set zero value
+				newSubSlice.Index(j).Set(reflect.Zero(newSubSlice.Index(j).Type()))
+			} else if isTargetPtr {
+				// For pointer fields, set directly to the parsed value pointer
+				newSubSlice.Index(j).Set(reflect.ValueOf(elemPtr))
+			} else {
+				ptrValue := reflect.ValueOf(elemPtr)
+				if ptrValue.Kind() == reflect.Ptr && !ptrValue.IsNil() {
+					newSubSlice.Index(j).Set(ptrValue.Elem())
+				} else {
+					// If the pointer is nil, set to zero value
+					newSubSlice.Index(j).Set(reflect.Zero(newSubSlice.Index(j).Type()))
+				}
+			}
+		}
+
+		newGroup.Index(i).Set(newSubSlice)
+	}
+
+	field.Set(newGroup)
 	return nil
 }
