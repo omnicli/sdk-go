@@ -587,10 +587,6 @@ func (a *Args) Fill(v interface{}, prefix ...string) error {
 			continue
 		}
 
-		// TODO: REMOVE DEBUG
-		fmt.Printf("argName: %s\n", argName)
-		fmt.Printf("declaredArgs: %+v\n", a.declaredArgs)
-
 		typeInfo, exists := a.declaredArgs[argName]
 		if !exists {
 			return fmt.Errorf("error in %s: field %q: parameter %q not found",
