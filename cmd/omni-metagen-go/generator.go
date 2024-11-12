@@ -318,8 +318,14 @@ func (g *Generator) applyOptions(param *Parameter, options map[string]interface{
 	if def, ok := options["default"]; ok {
 		param.Default = def
 	}
+	if defMissing, ok := options["default_missing_value"]; ok {
+		param.DefaultMissingValue = defMissing
+	}
 	if numVal, ok := options["num_values"].(string); ok {
 		param.NumValues = numVal
+	}
+	if groupOcc, ok := options["group_occurrences"].(bool); ok {
+		param.GroupOccurrences = groupOcc
 	}
 	if delimiter, ok := options["delimiter"].(string); ok {
 		param.Delimiter = delimiter
@@ -332,6 +338,9 @@ func (g *Generator) applyOptions(param *Parameter, options map[string]interface{
 	}
 	if allowHyphen, ok := options["allow_hyphen_values"].(bool); ok {
 		param.AllowHyphenValues = allowHyphen
+	}
+	if allowNeg, ok := options["allow_negative_numbers"].(bool); ok {
+		param.AllowNegativeNumbers = allowNeg
 	}
 	if requires, ok := options["requires"].([]string); ok {
 		param.Requires = requires
