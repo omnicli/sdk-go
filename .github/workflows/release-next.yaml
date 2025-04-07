@@ -64,22 +64,22 @@ jobs:
           fetch-tags: ${{ env.RELEASE_VERSION != '' && true || false }}
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Check changed files since previous release
-        uses: tj-actions/changed-files@v45
+      - name: Get the changed files
         id: changed-files
         if: ${{ env.RELEASE_VERSION == '' && inputs.force != 'true' }}
-        with:
-          base_sha: ${{ env.PREVIOUS_TAG_SHA }}
-          files_yaml: |
-            source_code:
-              - 'go.mod'
-              - 'go.sum'
-              - '*.go'
-              - '!*_test.go'
-              - 'cmd/**/*.go'
-              - '!cmd/**/*_test.go'
-              - 'internal/**/*.go'
-              - '!internal/**/*_test.go'
+        env:
+          BASE_SHA: ${{ env.PREVIOUS_TAG_SHA }}
+          MODIFIED_FILES_SOURCE_CODE: |
+            go.mod
+            go.sum
+            *.go
+            !*_test.go
+            cmd/**/*.go
+            !cmd/**/*_test.go
+            internal/**/*.go
+            !internal/**/*_test.go
+        run: |
+          .github/scripts/get-changed-files.sh
 
       - name: Check if a new release would be required
         env:
