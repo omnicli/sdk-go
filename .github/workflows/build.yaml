@@ -45,7 +45,7 @@ jobs:
           echo "REQUIRES_TESTS=${REQUIRES_TESTS}" | tee -a "$GITHUB_ENV"
 
       - name: Checkout current commit
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         if: ${{ env.REQUIRES_TESTS != 'true' }}
 
       - name: Get the changed files
@@ -101,7 +101,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup go
         uses: actions/setup-go@v5
@@ -125,7 +125,7 @@ jobs:
 
     steps:
       - name: Checkout current commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup go
         uses: actions/setup-go@v5
@@ -183,7 +183,7 @@ jobs:
           private-key: ${{ env.PRIVATE_KEY }}
 
       - name: Checkout current commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ steps.app-token.outputs.token }}
 
@@ -225,7 +225,7 @@ jobs:
           private-key: ${{ env.PRIVATE_KEY }}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
