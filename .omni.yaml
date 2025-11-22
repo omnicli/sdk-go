@@ -1,7 +1,7 @@
 up:
   - go: auto
   - github-release:
-      golangci/golangci-lint: 1.60.1
+      golangci/golangci-lint: 2.6.2
       goreleaser/goreleaser: latest
 
 path:

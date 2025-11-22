@@ -12,22 +12,22 @@ func TestFieldNaming(t *testing.T) {
 	defer cleanup()
 
 	// Set up environment for all naming test cases
-	os.Setenv("OMNI_ARG_LIST", "log_file db_host oom_score valid_oom_value different_name")
+	_ = os.Setenv("OMNI_ARG_LIST", "log_file db_host oom_score valid_oom_value different_name")
 
-	os.Setenv("OMNI_ARG_LOG_FILE_TYPE", "str")
-	os.Setenv("OMNI_ARG_LOG_FILE_VALUE", "test.log")
+	_ = os.Setenv("OMNI_ARG_LOG_FILE_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_LOG_FILE_VALUE", "test.log")
 
-	os.Setenv("OMNI_ARG_DB_HOST_TYPE", "str")
-	os.Setenv("OMNI_ARG_DB_HOST_VALUE", "localhost")
+	_ = os.Setenv("OMNI_ARG_DB_HOST_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_DB_HOST_VALUE", "localhost")
 
-	os.Setenv("OMNI_ARG_OOM_SCORE_TYPE", "int")
-	os.Setenv("OMNI_ARG_OOM_SCORE_VALUE", "42")
+	_ = os.Setenv("OMNI_ARG_OOM_SCORE_TYPE", "int")
+	_ = os.Setenv("OMNI_ARG_OOM_SCORE_VALUE", "42")
 
-	os.Setenv("OMNI_ARG_VALID_OOM_VALUE_TYPE", "bool")
-	os.Setenv("OMNI_ARG_VALID_OOM_VALUE_VALUE", "true")
+	_ = os.Setenv("OMNI_ARG_VALID_OOM_VALUE_TYPE", "bool")
+	_ = os.Setenv("OMNI_ARG_VALID_OOM_VALUE_VALUE", "true")
 
-	os.Setenv("OMNI_ARG_DIFFERENT_NAME_TYPE", "str")
-	os.Setenv("OMNI_ARG_DIFFERENT_NAME_VALUE", "custom")
+	_ = os.Setenv("OMNI_ARG_DIFFERENT_NAME_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_DIFFERENT_NAME_VALUE", "custom")
 
 	var cfg struct {
 		LogFile       string // should map to log_file
@@ -80,16 +80,16 @@ func TestCaseSensitivity(t *testing.T) {
 	cleanup := cleanEnv(t)
 	defer cleanup()
 
-	os.Setenv("OMNI_ARG_LIST", "TestArg UPPER_ARG lower_arg")
+	_ = os.Setenv("OMNI_ARG_LIST", "TestArg UPPER_ARG lower_arg")
 
-	os.Setenv("OMNI_ARG_TESTARG_TYPE", "str")
-	os.Setenv("OMNI_ARG_TESTARG_VALUE", "test")
+	_ = os.Setenv("OMNI_ARG_TESTARG_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_TESTARG_VALUE", "test")
 
-	os.Setenv("OMNI_ARG_UPPER_ARG_TYPE", "str")
-	os.Setenv("OMNI_ARG_UPPER_ARG_VALUE", "upper")
+	_ = os.Setenv("OMNI_ARG_UPPER_ARG_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_UPPER_ARG_VALUE", "upper")
 
-	os.Setenv("OMNI_ARG_LOWER_ARG_TYPE", "str")
-	os.Setenv("OMNI_ARG_LOWER_ARG_VALUE", "lower")
+	_ = os.Setenv("OMNI_ARG_LOWER_ARG_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_LOWER_ARG_VALUE", "lower")
 
 	var cfg struct {
 		Testarg  string
@@ -141,31 +141,31 @@ func TestComplexNaming(t *testing.T) {
 		SkipMe        string `omniarg:"-"`
 	}
 
-	os.Setenv("OMNI_ARG_LIST", "xml_file json_api_config ssh_key_file oauth_token last_id max_rps enable_tls_v12 my_custom_name")
+	_ = os.Setenv("OMNI_ARG_LIST", "xml_file json_api_config ssh_key_file oauth_token last_id max_rps enable_tls_v12 my_custom_name")
 
-	os.Setenv("OMNI_ARG_XML_FILE_TYPE", "str")
-	os.Setenv("OMNI_ARG_XML_FILE_VALUE", "config.xml")
+	_ = os.Setenv("OMNI_ARG_XML_FILE_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_XML_FILE_VALUE", "config.xml")
 
-	os.Setenv("OMNI_ARG_JSON_API_CONFIG_TYPE", "str")
-	os.Setenv("OMNI_ARG_JSON_API_CONFIG_VALUE", "api.json")
+	_ = os.Setenv("OMNI_ARG_JSON_API_CONFIG_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_JSON_API_CONFIG_VALUE", "api.json")
 
-	os.Setenv("OMNI_ARG_SSH_KEY_FILE_TYPE", "str")
-	os.Setenv("OMNI_ARG_SSH_KEY_FILE_VALUE", "id_rsa")
+	_ = os.Setenv("OMNI_ARG_SSH_KEY_FILE_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_SSH_KEY_FILE_VALUE", "id_rsa")
 
-	os.Setenv("OMNI_ARG_OAUTH_TOKEN_TYPE", "str")
-	os.Setenv("OMNI_ARG_OAUTH_TOKEN_VALUE", "token123")
+	_ = os.Setenv("OMNI_ARG_OAUTH_TOKEN_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_OAUTH_TOKEN_VALUE", "token123")
 
-	os.Setenv("OMNI_ARG_LAST_ID_TYPE", "int")
-	os.Setenv("OMNI_ARG_LAST_ID_VALUE", "42")
+	_ = os.Setenv("OMNI_ARG_LAST_ID_TYPE", "int")
+	_ = os.Setenv("OMNI_ARG_LAST_ID_VALUE", "42")
 
-	os.Setenv("OMNI_ARG_MAX_RPS_TYPE", "int")
-	os.Setenv("OMNI_ARG_MAX_RPS_VALUE", "100")
+	_ = os.Setenv("OMNI_ARG_MAX_RPS_TYPE", "int")
+	_ = os.Setenv("OMNI_ARG_MAX_RPS_VALUE", "100")
 
-	os.Setenv("OMNI_ARG_ENABLE_TLS_V12_TYPE", "bool")
-	os.Setenv("OMNI_ARG_ENABLE_TLS_V12_VALUE", "true")
+	_ = os.Setenv("OMNI_ARG_ENABLE_TLS_V12_TYPE", "bool")
+	_ = os.Setenv("OMNI_ARG_ENABLE_TLS_V12_VALUE", "true")
 
-	os.Setenv("OMNI_ARG_MY_CUSTOM_NAME_TYPE", "str")
-	os.Setenv("OMNI_ARG_MY_CUSTOM_NAME_VALUE", "custom")
+	_ = os.Setenv("OMNI_ARG_MY_CUSTOM_NAME_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_MY_CUSTOM_NAME_VALUE", "custom")
 
 	var cfg ComplexConfig
 	_, err := omnicli.ParseArgs(&cfg)

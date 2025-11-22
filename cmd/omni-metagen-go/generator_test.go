@@ -15,7 +15,7 @@ func TestGenerator(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Write test files
 	writeTestFile(t, tmpDir, "basic.go", `
@@ -152,7 +152,7 @@ func TestComplexStructs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	writeTestFile(t, tmpDir, "complex.go", `
 package testpkg
@@ -233,7 +233,7 @@ func TestMultipleFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Write multiple test files
 	writeTestFile(t, tmpDir, "cmd1.go", `
@@ -302,7 +302,7 @@ func TestEmbeddedStruct(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	writeTestFile(t, tmpDir, "types.go", `
 package testpkg
@@ -350,7 +350,7 @@ func TestEmbeddedStructWithTag(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	writeTestFile(t, tmpDir, "types.go", `
 package testpkg
@@ -398,7 +398,7 @@ func TestEmbeddedPointerStruct(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	writeTestFile(t, tmpDir, "types.go", `
 package testpkg
@@ -446,7 +446,7 @@ func TestEmbeddedPointerStructWithTag(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	writeTestFile(t, tmpDir, "types.go", `
 package testpkg
@@ -494,7 +494,7 @@ func TestStructField(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	writeTestFile(t, tmpDir, "types.go", `
 package testpkg
@@ -553,7 +553,7 @@ func TestStructPointerField(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	writeTestFile(t, tmpDir, "types.go", `
 package testpkg
@@ -612,7 +612,7 @@ func TestStackedStructs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	writeTestFile(t, tmpDir, "types.go", `
 package testpkg
@@ -663,7 +663,7 @@ func TestBasicGroupType(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	writeTestFile(t, tmpDir, "basic_group.go", `
 package testpkg

@@ -30,10 +30,10 @@ func TestBooleanValues(t *testing.T) {
 		args = append(args, name)
 	}
 
-	os.Setenv("OMNI_ARG_LIST", strings.Join(args, " "))
+	_ = os.Setenv("OMNI_ARG_LIST", strings.Join(args, " "))
 	for name, tc := range testCases {
-		os.Setenv("OMNI_ARG_"+strings.ToUpper(name)+"_TYPE", "bool")
-		os.Setenv("OMNI_ARG_"+strings.ToUpper(name)+"_VALUE", tc.value)
+		_ = os.Setenv("OMNI_ARG_"+strings.ToUpper(name)+"_TYPE", "bool")
+		_ = os.Setenv("OMNI_ARG_"+strings.ToUpper(name)+"_VALUE", tc.value)
 	}
 
 	var cfg struct {
@@ -95,9 +95,9 @@ func TestInvalidValues(t *testing.T) {
 			cleanup := cleanEnv(t)
 			defer cleanup()
 
-			os.Setenv("OMNI_ARG_LIST", tt.name)
-			os.Setenv("OMNI_ARG_"+strings.ToUpper(tt.name)+"_TYPE", tt.argType)
-			os.Setenv("OMNI_ARG_"+strings.ToUpper(tt.name)+"_VALUE", tt.value)
+			_ = os.Setenv("OMNI_ARG_LIST", tt.name)
+			_ = os.Setenv("OMNI_ARG_"+strings.ToUpper(tt.name)+"_TYPE", tt.argType)
+			_ = os.Setenv("OMNI_ARG_"+strings.ToUpper(tt.name)+"_VALUE", tt.value)
 
 			_, err := omnicli.ParseArgs()
 			if err == nil {
@@ -114,11 +114,11 @@ func TestOptionalValues(t *testing.T) {
 	cleanup := cleanEnv(t)
 	defer cleanup()
 
-	os.Setenv("OMNI_ARG_LIST", "str_val int_val bool_val float_val")
-	os.Setenv("OMNI_ARG_STR_VAL_TYPE", "str")
-	os.Setenv("OMNI_ARG_INT_VAL_TYPE", "int")
-	os.Setenv("OMNI_ARG_BOOL_VAL_TYPE", "bool")
-	os.Setenv("OMNI_ARG_FLOAT_VAL_TYPE", "float")
+	_ = os.Setenv("OMNI_ARG_LIST", "str_val int_val bool_val float_val")
+	_ = os.Setenv("OMNI_ARG_STR_VAL_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_INT_VAL_TYPE", "int")
+	_ = os.Setenv("OMNI_ARG_BOOL_VAL_TYPE", "bool")
+	_ = os.Setenv("OMNI_ARG_FLOAT_VAL_TYPE", "float")
 	// Deliberately not setting any values
 
 	var cfg struct {

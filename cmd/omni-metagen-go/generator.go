@@ -134,7 +134,7 @@ outerLoop:
 		// Handle struct fields (both named types and inline structs)
 		nestedParams, err := g.handleEmbeddedStruct(field, prefix)
 		if err != nil {
-			return nil, fmt.Errorf("Error handling embedded struct: %w", err)
+			return nil, fmt.Errorf("error handling embedded struct: %w", err)
 		}
 		if nestedParams != nil {
 			parameters = append(parameters, nestedParams...)
@@ -170,7 +170,7 @@ outerLoop:
 			// Make sure the parameter name is lowercase
 			paramName = omniarg.SanitizeArgName(paramName, '-')
 			if paramName == "" {
-				return nil, fmt.Errorf("Empty parameter name for field %s\n", fieldName.Name)
+				return nil, fmt.Errorf("empty parameter name for field %s", fieldName.Name)
 			}
 
 			// Add the prefix
@@ -264,7 +264,7 @@ func (g *Generator) handleEmbeddedStruct(field *ast.Field, prefix string) ([]Par
 
 	structName = omniarg.SanitizeArgName(structName, '-')
 	if structName == "" {
-		return nil, fmt.Errorf("Empty struct name for field %s\n", field.Names[0].Name)
+		return nil, fmt.Errorf("empty struct name for field %s", field.Names[0].Name)
 	}
 	if prefix != "" {
 		structName = prefix + structName

@@ -97,10 +97,11 @@ func inferType(expr ast.Expr) (string, bool, error) {
 	}
 
 	if nestLevel > 0 {
-		if baseType == "flag" {
+		switch baseType {
+		case "flag":
 			// Arrays of flags are not supported, but arrays of bools are
 			baseType = "bool"
-		} else if baseType == "counter" {
+		case "counter":
 			return "", false, fmt.Errorf("arrays of counters are not supported")
 		}
 

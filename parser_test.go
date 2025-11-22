@@ -21,7 +21,7 @@ func cleanEnv(t *testing.T) func() {
 
 	// Clear all OMNI_ARG variables
 	for key := range oldEnv {
-		os.Unsetenv(key)
+		_ = os.Unsetenv(key)
 	}
 
 	// Return cleanup function
@@ -30,12 +30,12 @@ func cleanEnv(t *testing.T) func() {
 		for _, env := range os.Environ() {
 			if len(env) > 9 && env[:9] == "OMNI_ARG_" {
 				key := env[:strings.IndexByte(env, '=')]
-				os.Unsetenv(key)
+				_ = os.Unsetenv(key)
 			}
 		}
 		// Restore original environment
 		for key, value := range oldEnv {
-			os.Setenv(key, value)
+			_ = os.Setenv(key, value)
 		}
 	}
 }
@@ -57,7 +57,7 @@ func TestEmptyArgList(t *testing.T) {
 	cleanup := cleanEnv(t)
 	defer cleanup()
 
-	os.Setenv("OMNI_ARG_LIST", "")
+	_ = os.Setenv("OMNI_ARG_LIST", "")
 	args, err := omnicli.ParseArgs()
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -71,10 +71,10 @@ func TestStringArgDefaults(t *testing.T) {
 	cleanup := cleanEnv(t)
 	defer cleanup()
 
-	os.Setenv("OMNI_ARG_LIST", "test1 test2")
-	os.Setenv("OMNI_ARG_TEST1_TYPE", "str")
-	os.Setenv("OMNI_ARG_TEST1_VALUE", "value")
-	os.Setenv("OMNI_ARG_TEST2_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_LIST", "test1 test2")
+	_ = os.Setenv("OMNI_ARG_TEST1_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_TEST1_VALUE", "value")
+	_ = os.Setenv("OMNI_ARG_TEST2_TYPE", "str")
 	// Deliberately not setting TEST2_VALUE
 
 	var cfg struct {
@@ -108,31 +108,31 @@ func TestArrayHandling(t *testing.T) {
 	cleanup := cleanEnv(t)
 	defer cleanup()
 
-	os.Setenv("OMNI_ARG_LIST", "numbers strings bools floats")
+	_ = os.Setenv("OMNI_ARG_LIST", "numbers strings bools floats")
 
 	// Integer array
-	os.Setenv("OMNI_ARG_NUMBERS_TYPE", "int/3")
-	os.Setenv("OMNI_ARG_NUMBERS_VALUE_0", "1")
+	_ = os.Setenv("OMNI_ARG_NUMBERS_TYPE", "int/3")
+	_ = os.Setenv("OMNI_ARG_NUMBERS_VALUE_0", "1")
 	// Deliberately skipping VALUE_1
-	os.Setenv("OMNI_ARG_NUMBERS_VALUE_2", "3")
+	_ = os.Setenv("OMNI_ARG_NUMBERS_VALUE_2", "3")
 
 	// String array
-	os.Setenv("OMNI_ARG_STRINGS_TYPE", "str/3")
-	os.Setenv("OMNI_ARG_STRINGS_VALUE_0", "hello")
+	_ = os.Setenv("OMNI_ARG_STRINGS_TYPE", "str/3")
+	_ = os.Setenv("OMNI_ARG_STRINGS_VALUE_0", "hello")
 	// Deliberately skipping VALUE_1
-	os.Setenv("OMNI_ARG_STRINGS_VALUE_2", "world")
+	_ = os.Setenv("OMNI_ARG_STRINGS_VALUE_2", "world")
 
 	// Boolean array
-	os.Setenv("OMNI_ARG_BOOLS_TYPE", "bool/3")
-	os.Setenv("OMNI_ARG_BOOLS_VALUE_0", "true")
+	_ = os.Setenv("OMNI_ARG_BOOLS_TYPE", "bool/3")
+	_ = os.Setenv("OMNI_ARG_BOOLS_VALUE_0", "true")
 	// Deliberately skipping VALUE_1
-	os.Setenv("OMNI_ARG_BOOLS_VALUE_2", "false")
+	_ = os.Setenv("OMNI_ARG_BOOLS_VALUE_2", "false")
 
 	// Float array
-	os.Setenv("OMNI_ARG_FLOATS_TYPE", "float/3")
-	os.Setenv("OMNI_ARG_FLOATS_VALUE_0", "1.1")
+	_ = os.Setenv("OMNI_ARG_FLOATS_TYPE", "float/3")
+	_ = os.Setenv("OMNI_ARG_FLOATS_VALUE_0", "1.1")
 	// Deliberately skipping VALUE_1
-	os.Setenv("OMNI_ARG_FLOATS_VALUE_2", "3.3")
+	_ = os.Setenv("OMNI_ARG_FLOATS_VALUE_2", "3.3")
 
 	var cfg struct {
 		Numbers []int
@@ -180,15 +180,15 @@ func TestEmbeddedStructValue(t *testing.T) {
 	cleanup := cleanEnv(t)
 	defer cleanup()
 
-	os.Setenv("OMNI_ARG_LIST", "user_name inner_value config_override_value config_setting")
-	os.Setenv("OMNI_ARG_USER_NAME_TYPE", "str")
-	os.Setenv("OMNI_ARG_USER_NAME_VALUE", "john")
-	os.Setenv("OMNI_ARG_INNER_VALUE_TYPE", "int")
-	os.Setenv("OMNI_ARG_INNER_VALUE_VALUE", "42")
-	os.Setenv("OMNI_ARG_CONFIG_SETTING_TYPE", "bool")
-	os.Setenv("OMNI_ARG_CONFIG_SETTING_VALUE", "true")
-	os.Setenv("OMNI_ARG_CONFIG_OVERRIDE_VALUE_TYPE", "int")
-	os.Setenv("OMNI_ARG_CONFIG_OVERRIDE_VALUE_VALUE", "765")
+	_ = os.Setenv("OMNI_ARG_LIST", "user_name inner_value config_override_value config_setting")
+	_ = os.Setenv("OMNI_ARG_USER_NAME_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_USER_NAME_VALUE", "john")
+	_ = os.Setenv("OMNI_ARG_INNER_VALUE_TYPE", "int")
+	_ = os.Setenv("OMNI_ARG_INNER_VALUE_VALUE", "42")
+	_ = os.Setenv("OMNI_ARG_CONFIG_SETTING_TYPE", "bool")
+	_ = os.Setenv("OMNI_ARG_CONFIG_SETTING_VALUE", "true")
+	_ = os.Setenv("OMNI_ARG_CONFIG_OVERRIDE_VALUE_TYPE", "int")
+	_ = os.Setenv("OMNI_ARG_CONFIG_OVERRIDE_VALUE_VALUE", "765")
 
 	type Inner struct {
 		Value int
@@ -244,16 +244,16 @@ func TestEmbeddedStructPointer(t *testing.T) {
 	cleanup := cleanEnv(t)
 	defer cleanup()
 
-	os.Setenv("OMNI_ARG_LIST", "name settings_enabled settings_value settings_items")
-	os.Setenv("OMNI_ARG_NAME_TYPE", "str")
-	os.Setenv("OMNI_ARG_NAME_VALUE", "test")
-	os.Setenv("OMNI_ARG_SETTINGS_ENABLED_TYPE", "bool")
-	os.Setenv("OMNI_ARG_SETTINGS_ENABLED_VALUE", "true")
-	os.Setenv("OMNI_ARG_SETTINGS_VALUE_TYPE", "float")
-	os.Setenv("OMNI_ARG_SETTINGS_VALUE_VALUE", "3.14")
-	os.Setenv("OMNI_ARG_SETTINGS_ITEMS_TYPE", "str/2")
-	os.Setenv("OMNI_ARG_SETTINGS_ITEMS_VALUE_0", "item1")
-	os.Setenv("OMNI_ARG_SETTINGS_ITEMS_VALUE_1", "item2")
+	_ = os.Setenv("OMNI_ARG_LIST", "name settings_enabled settings_value settings_items")
+	_ = os.Setenv("OMNI_ARG_NAME_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_NAME_VALUE", "test")
+	_ = os.Setenv("OMNI_ARG_SETTINGS_ENABLED_TYPE", "bool")
+	_ = os.Setenv("OMNI_ARG_SETTINGS_ENABLED_VALUE", "true")
+	_ = os.Setenv("OMNI_ARG_SETTINGS_VALUE_TYPE", "float")
+	_ = os.Setenv("OMNI_ARG_SETTINGS_VALUE_VALUE", "3.14")
+	_ = os.Setenv("OMNI_ARG_SETTINGS_ITEMS_TYPE", "str/2")
+	_ = os.Setenv("OMNI_ARG_SETTINGS_ITEMS_VALUE_0", "item1")
+	_ = os.Setenv("OMNI_ARG_SETTINGS_ITEMS_VALUE_1", "item2")
 
 	type Settings struct {
 		Enabled bool
@@ -310,46 +310,46 @@ func TestGroupValues(t *testing.T) {
 	defer cleanup()
 
 	// Set up group values environment
-	os.Setenv("OMNI_ARG_LIST", "string_groups int_groups float_groups bool_groups")
+	_ = os.Setenv("OMNI_ARG_LIST", "string_groups int_groups float_groups bool_groups")
 
 	// String groups
-	os.Setenv("OMNI_ARG_STRING_GROUPS_TYPE", "str/3/2")
-	os.Setenv("OMNI_ARG_STRING_GROUPS_TYPE_0", "str/2")
-	os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_0_0", "a1")
-	os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_0_1", "a2")
-	os.Setenv("OMNI_ARG_STRING_GROUPS_TYPE_1", "str/3")
-	os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_1_0", "b1")
-	os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_1_1", "b2")
-	os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_1_2", "b3")
-	os.Setenv("OMNI_ARG_STRING_GROUPS_TYPE_2", "str/1")
-	os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_2_0", "c1")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_TYPE", "str/3/2")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_TYPE_0", "str/2")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_0_0", "a1")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_0_1", "a2")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_TYPE_1", "str/3")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_1_0", "b1")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_1_1", "b2")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_1_2", "b3")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_TYPE_2", "str/1")
+	_ = os.Setenv("OMNI_ARG_STRING_GROUPS_VALUE_2_0", "c1")
 
 	// Int groups
-	os.Setenv("OMNI_ARG_INT_GROUPS_TYPE", "int/2/2")
-	os.Setenv("OMNI_ARG_INT_GROUPS_TYPE_0", "int/2")
-	os.Setenv("OMNI_ARG_INT_GROUPS_VALUE_0_0", "1")
-	os.Setenv("OMNI_ARG_INT_GROUPS_VALUE_0_1", "2")
-	os.Setenv("OMNI_ARG_INT_GROUPS_TYPE_1", "int/2")
-	os.Setenv("OMNI_ARG_INT_GROUPS_VALUE_1_0", "3")
-	os.Setenv("OMNI_ARG_INT_GROUPS_VALUE_1_1", "4")
+	_ = os.Setenv("OMNI_ARG_INT_GROUPS_TYPE", "int/2/2")
+	_ = os.Setenv("OMNI_ARG_INT_GROUPS_TYPE_0", "int/2")
+	_ = os.Setenv("OMNI_ARG_INT_GROUPS_VALUE_0_0", "1")
+	_ = os.Setenv("OMNI_ARG_INT_GROUPS_VALUE_0_1", "2")
+	_ = os.Setenv("OMNI_ARG_INT_GROUPS_TYPE_1", "int/2")
+	_ = os.Setenv("OMNI_ARG_INT_GROUPS_VALUE_1_0", "3")
+	_ = os.Setenv("OMNI_ARG_INT_GROUPS_VALUE_1_1", "4")
 
 	// Float groups
-	os.Setenv("OMNI_ARG_FLOAT_GROUPS_TYPE", "float/2/2")
-	os.Setenv("OMNI_ARG_FLOAT_GROUPS_TYPE_0", "float/2")
-	os.Setenv("OMNI_ARG_FLOAT_GROUPS_VALUE_0_0", "1.1")
-	os.Setenv("OMNI_ARG_FLOAT_GROUPS_VALUE_0_1", "2.2")
-	os.Setenv("OMNI_ARG_FLOAT_GROUPS_TYPE_1", "float/2")
-	os.Setenv("OMNI_ARG_FLOAT_GROUPS_VALUE_1_0", "3.3")
-	os.Setenv("OMNI_ARG_FLOAT_GROUPS_VALUE_1_1", "4.4")
+	_ = os.Setenv("OMNI_ARG_FLOAT_GROUPS_TYPE", "float/2/2")
+	_ = os.Setenv("OMNI_ARG_FLOAT_GROUPS_TYPE_0", "float/2")
+	_ = os.Setenv("OMNI_ARG_FLOAT_GROUPS_VALUE_0_0", "1.1")
+	_ = os.Setenv("OMNI_ARG_FLOAT_GROUPS_VALUE_0_1", "2.2")
+	_ = os.Setenv("OMNI_ARG_FLOAT_GROUPS_TYPE_1", "float/2")
+	_ = os.Setenv("OMNI_ARG_FLOAT_GROUPS_VALUE_1_0", "3.3")
+	_ = os.Setenv("OMNI_ARG_FLOAT_GROUPS_VALUE_1_1", "4.4")
 
 	// Bool groups
-	os.Setenv("OMNI_ARG_BOOL_GROUPS_TYPE", "bool/2/2")
-	os.Setenv("OMNI_ARG_BOOL_GROUPS_TYPE_0", "bool/2")
-	os.Setenv("OMNI_ARG_BOOL_GROUPS_VALUE_0_0", "true")
-	os.Setenv("OMNI_ARG_BOOL_GROUPS_VALUE_0_1", "false")
-	os.Setenv("OMNI_ARG_BOOL_GROUPS_TYPE_1", "bool/2")
-	os.Setenv("OMNI_ARG_BOOL_GROUPS_VALUE_1_0", "false")
-	os.Setenv("OMNI_ARG_BOOL_GROUPS_VALUE_1_1", "true")
+	_ = os.Setenv("OMNI_ARG_BOOL_GROUPS_TYPE", "bool/2/2")
+	_ = os.Setenv("OMNI_ARG_BOOL_GROUPS_TYPE_0", "bool/2")
+	_ = os.Setenv("OMNI_ARG_BOOL_GROUPS_VALUE_0_0", "true")
+	_ = os.Setenv("OMNI_ARG_BOOL_GROUPS_VALUE_0_1", "false")
+	_ = os.Setenv("OMNI_ARG_BOOL_GROUPS_TYPE_1", "bool/2")
+	_ = os.Setenv("OMNI_ARG_BOOL_GROUPS_VALUE_1_0", "false")
+	_ = os.Setenv("OMNI_ARG_BOOL_GROUPS_VALUE_1_1", "true")
 
 	type Config struct {
 		StringGroups [][]string
@@ -426,8 +426,8 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Invalid type format",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "str/abc") // Invalid size
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "str/abc") // Invalid size
 			},
 			config:    &struct{ Test string }{},
 			expectErr: "invalid type string",
@@ -435,8 +435,8 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Invalid group format",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "str/2/abc") // Invalid group size
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "str/2/abc") // Invalid group size
 			},
 			config:    &struct{ Test [][]string }{},
 			expectErr: "invalid type string",
@@ -444,8 +444,8 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Type mismatch with group",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "str/0/0")
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "str/0/0")
 			},
 			config:    &struct{ Test []string }{}, // Should be [][]string
 			expectErr: "is not for grouped occurrences but argument is",
@@ -453,9 +453,9 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Invalid boolean value",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "bool")
-				os.Setenv("OMNI_ARG_TEST_VALUE", "invalid")
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "bool")
+				_ = os.Setenv("OMNI_ARG_TEST_VALUE", "invalid")
 			},
 			config:    &struct{ Test bool }{},
 			expectErr: "expected 'true' or 'false', got 'invalid'",
@@ -463,9 +463,9 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Invalid integer value",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "int")
-				os.Setenv("OMNI_ARG_TEST_VALUE", "12.34")
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "int")
+				_ = os.Setenv("OMNI_ARG_TEST_VALUE", "12.34")
 			},
 			config:    &struct{ Test int }{},
 			expectErr: "expected integer, got '12.34'",
@@ -473,9 +473,9 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Invalid float value",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "float")
-				os.Setenv("OMNI_ARG_TEST_VALUE", "not-a-float")
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "float")
+				_ = os.Setenv("OMNI_ARG_TEST_VALUE", "not-a-float")
 			},
 			config:    &struct{ Test float64 }{},
 			expectErr: "expected float, got 'not-a-float'",
@@ -483,8 +483,8 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Missing type for group index",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "str/2/2")
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "str/2/2")
 				// Not setting OMNI_ARG_TEST_TYPE_0
 			},
 			config:    &struct{ Test [][]string }{},
@@ -493,8 +493,8 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Unsupported field type",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "str")
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "str")
 			},
 			config:    &struct{ Test complex128 }{},
 			expectErr: "unsupported field type",
@@ -502,8 +502,8 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Too many type segments",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "str/1/2/3/4")
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "str/1/2/3/4")
 			},
 			config:    &struct{ Test string }{},
 			expectErr: "invalid type string",
@@ -511,8 +511,8 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Non-struct target",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "str")
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "str")
 			},
 			config:    new(string),
 			expectErr: "must be a pointer to a struct",
@@ -520,8 +520,8 @@ func TestErrorCases(t *testing.T) {
 		{
 			name: "Nil pointer target",
 			setupEnv: func() {
-				os.Setenv("OMNI_ARG_LIST", "test")
-				os.Setenv("OMNI_ARG_TEST_TYPE", "str")
+				_ = os.Setenv("OMNI_ARG_LIST", "test")
+				_ = os.Setenv("OMNI_ARG_TEST_TYPE", "str")
 			},
 			config:    (*struct{})(nil),
 			expectErr: "must be a non-nil pointer",
@@ -550,25 +550,25 @@ func TestArgumentPointers(t *testing.T) {
 	cleanup := cleanEnv(t)
 	defer cleanup()
 
-	os.Setenv("OMNI_ARG_LIST", "str_val str_slice str_group")
+	_ = os.Setenv("OMNI_ARG_LIST", "str_val str_slice str_group")
 
 	// Single value
-	os.Setenv("OMNI_ARG_STR_VAL_TYPE", "str")
-	os.Setenv("OMNI_ARG_STR_VAL_VALUE", "test")
+	_ = os.Setenv("OMNI_ARG_STR_VAL_TYPE", "str")
+	_ = os.Setenv("OMNI_ARG_STR_VAL_VALUE", "test")
 
 	// Slice
-	os.Setenv("OMNI_ARG_STR_SLICE_TYPE", "str/2")
-	os.Setenv("OMNI_ARG_STR_SLICE_VALUE_0", "a")
-	os.Setenv("OMNI_ARG_STR_SLICE_VALUE_1", "b")
+	_ = os.Setenv("OMNI_ARG_STR_SLICE_TYPE", "str/2")
+	_ = os.Setenv("OMNI_ARG_STR_SLICE_VALUE_0", "a")
+	_ = os.Setenv("OMNI_ARG_STR_SLICE_VALUE_1", "b")
 
 	// Group
-	os.Setenv("OMNI_ARG_STR_GROUP_TYPE", "str/2/2")
-	os.Setenv("OMNI_ARG_STR_GROUP_TYPE_0", "str/2")
-	os.Setenv("OMNI_ARG_STR_GROUP_VALUE_0_0", "x")
-	os.Setenv("OMNI_ARG_STR_GROUP_VALUE_0_1", "y")
-	os.Setenv("OMNI_ARG_STR_GROUP_TYPE_1", "str/2")
-	os.Setenv("OMNI_ARG_STR_GROUP_VALUE_1_0", "m")
-	os.Setenv("OMNI_ARG_STR_GROUP_VALUE_1_1", "n")
+	_ = os.Setenv("OMNI_ARG_STR_GROUP_TYPE", "str/2/2")
+	_ = os.Setenv("OMNI_ARG_STR_GROUP_TYPE_0", "str/2")
+	_ = os.Setenv("OMNI_ARG_STR_GROUP_VALUE_0_0", "x")
+	_ = os.Setenv("OMNI_ARG_STR_GROUP_VALUE_0_1", "y")
+	_ = os.Setenv("OMNI_ARG_STR_GROUP_TYPE_1", "str/2")
+	_ = os.Setenv("OMNI_ARG_STR_GROUP_VALUE_1_0", "m")
+	_ = os.Setenv("OMNI_ARG_STR_GROUP_VALUE_1_1", "n")
 
 	type Config struct {
 		StrVal   *string
